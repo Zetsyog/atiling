@@ -1,0 +1,9 @@
+ColumnLimit: 80
+UseTab: Always
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AlignConsecutiveAssignments: true
+AlignEscapedNewlines : Left
