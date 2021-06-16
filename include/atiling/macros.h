@@ -1,11 +1,19 @@
 #ifndef ATILING_MACROS_H
 #define ATILING_MACROS_H
 
-#define ATILING_VERSION "0.1.0"
+#define ATILING_VERSION			 "0.1.0"
 
-#define ATILING_DEBUG	1
-#define ATILING_FALSE	0
-#define ATILING_TRUE	1
+#define ATILING_DEBUG			 1
+#define ATILING_FALSE			 0
+#define ATILING_TRUE			 1
+
+#define ATILING_MAX_FILENAME_LEN 100
+#define ATILING_PRAGMA_FILE_NAME "loop"
+#define ATILING_PRAGMA_FILE_EXT	 ".tmp"
+
+#define ATILING_GEN_STR_PCMAX	 "_pcmax"
+#define ATILING_GEN_STR_EHRHART	 "_Ehrhart"
+#define ATILING_GEN_STR_TILEVOL	 "TILE_VOL_L"
 
 /*----------------------------------------------------------------------------+
  |                               UTILITY MACROS                               |

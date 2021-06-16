@@ -128,8 +128,22 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	get_iterator_name(info, statement);
 	info->string_names = osl_scop_names(scop);
 
+	// If possible, replace iterator names with statement iterator names.
+	osl_body_p body =
+		(osl_body_p)osl_generic_lookup(statement->extension, OSL_URI_BODY);
+	if (body && body->iterators != NULL) {
+		info->string_names->iterators = body->iterators;
+	}
+
+	// If possible, replace parameter names with scop parameter names.
 	if (osl_generic_has_URI(scop->parameters, OSL_URI_STRINGS)) {
 		info->string_names->parameters = scop->parameters->data;
+	}
+
+	// If possible, replace array names with arrays extension names.
+	osl_arrays_p arrays = osl_generic_lookup(scop->extension, OSL_URI_ARRAYS);
+	if (arrays != NULL) {
+		info->string_names->arrays = osl_arrays_to_strings(arrays);
 	}
 
 	osl_relation_p domain = statement->domain;
@@ -143,11 +157,6 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	osl_int_init_set_si(domain->precision, &zero, 0);
 
 	for (int i = 0; i < domain->nb_rows; i++) {
-		for (int j = 0; j < domain->nb_columns; j++) {
-			osl_int_print(stdout, 0, domain->m[i][j]);
-			printf(" ");
-		}
-		printf("\n");
 
 		// if m[i][1 + index] > 0
 		// ie rel of type loop iterator >= x
@@ -164,18 +173,12 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	return info;
 }
 
-void loop_info_dump_relation(loop_info_p info, int row) {
-	for (int i = 0; i < info->relation->nb_columns; i++) {
-		osl_int_print(stdout, info->relation->precision,
-					  info->relation->m[row][i]);
-		printf(" ");
-	}
+void loop_info_dump_relation(FILE *file, loop_info_p info, int row) {
 	char **name_array =
 		osl_relation_strings(info->relation, info->string_names);
 
 	char *exp = osl_relation_expression(info->relation, row, name_array);
-	printf("\n");
-	printf("%s >=0\n", exp);
+	fprintf(file, "%s >=0\n", exp);
 
 	// Free the array of strings.
 	if (name_array != NULL) {
@@ -186,16 +189,15 @@ void loop_info_dump_relation(loop_info_p info, int row) {
 	free(exp);
 }
 
-void loop_info_dump(loop_info_p info) {
-	printf("Loop index %li\n", info->index);
-	printf("iterator name = %s\n", info->name);
-	printf("start :\n\t");
-	loop_info_dump_relation(info, info->start_row);
+void loop_info_dump(FILE *file, loop_info_p info) {
+	fprintf(file, "Loop index %li\n", info->index);
+	fprintf(file, "iterator name = %s\n", info->name);
+	fprintf(file, "start :\n\t");
+	loop_info_dump_relation(file, info, info->start_row);
+	fprintf(file, "\n");
 
-	printf("\n");
-
-	printf("end :\n\t");
-	loop_info_dump_relation(info, info->end_row);
+	fprintf(file, "end :\n\t");
+	loop_info_dump_relation(file, info, info->end_row);
 }
 
 void loop_info_free(loop_info_p info) {

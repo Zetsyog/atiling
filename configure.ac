@@ -128,11 +128,13 @@ dnl ############################################################################
 AC_SUBST(VERSION_MAJOR)
 AC_SUBST(VERSION_MINOR)
 AC_SUBST(VERSION_REVISION)
+AC_SUBST([YACC_PREFIX], [at_])
 
 dnl # Config Makefile
-AC_CONFIG_FILES([
-  Makefile
-  include/atiling/macros.h
+AC_CONFIG_FILES([\
+  Makefile \
+  include/atiling/macros.h \
+  include/atiling/yacc.h
 ])
 
 AC_OUTPUT

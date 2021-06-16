@@ -6,11 +6,19 @@
 int main(int argc, char **argv) {
 	atiling_options_p options;
 	FILE *input, *output;
+	char **input_files = NULL;
 
 	options = atiling_options_read(argc, argv, &input, &output);
 
 	if (options->name != NULL) {
-		atiling_extract(input, options->name);
+		atiling_pragma_p *pragma = atiling_extract(input, options);
+
+		for (int i = 0; pragma[i] != NULL; i++) {
+			atiling_pragma_idump(stdout, pragma[i], 0);
+		}
+
+		atiling_gen(input, output, pragma);
+
 		fclose(input);
 	}
 

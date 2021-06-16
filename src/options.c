@@ -141,12 +141,17 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 			ATILING_error("usage: too many args (-h for help)");
 		} else {
 			if (!strcmp(argv[optind], "-")) {
+				printf("j%s\n", argv[optind]);
 				*input = stdin;
+				ATILING_strdup(options->name, "stdin");
+
 			} else {
 				*input = fopen(argv[optind], "r");
 				if (*input == NULL)
 					ATILING_error("cannot open input file");
-			}
+
+				ATILING_strdup(options->name, argv[optind]);
+						}
 		}
 	}
 

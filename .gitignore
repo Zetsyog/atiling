@@ -12,6 +12,9 @@ src/scanner.c
 # Log files
 *.log
 
+# Tmp files
+*.tmp
+
 # C gitignore template (https://github.com/github/gitignore/blob/master/C.gitignore)
 # Prerequisites
 *.d

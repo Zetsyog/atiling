@@ -1,0 +1,45 @@
+#ifndef ATILING_YACC_CONF
+#define ATILING_YACC_CONF
+
+#define yymaxdepth @YACC_PREFIX@maxdepth
+#define yyparse	   @YACC_PREFIX@parse
+#define yylex	   @YACC_PREFIX@lex
+#define yyerror	   @YACC_PREFIX@error
+#define yylval	   @YACC_PREFIX@lval
+#define yychar	   @YACC_PREFIX@char
+#define yydebug	   @YACC_PREFIX@debug
+#define yypact	   @YACC_PREFIX@pact
+#define yyr1	   @YACC_PREFIX@r1
+#define yyr2	   @YACC_PREFIX@r2
+#define yydef	   @YACC_PREFIX@def
+#define yychk	   @YACC_PREFIX@chk
+#define yypgo	   @YACC_PREFIX@pgo
+#define yyact	   @YACC_PREFIX@act
+#define yyexca	   @YACC_PREFIX@exca
+#define yyerrflag  @YACC_PREFIX@errflag
+#define yynerrs	   @YACC_PREFIX@nerrs
+#define yyps	   @YACC_PREFIX@ps
+#define yypv	   @YACC_PREFIX@pv
+#define yys		   @YACC_PREFIX@s
+#define yy_yys	   @YACC_PREFIX@yys
+#define yystate	   @YACC_PREFIX@state
+#define yytmp	   @YACC_PREFIX@tmp
+#define yyv		   @YACC_PREFIX@v
+#define yy_yyv	   @YACC_PREFIX@yyv
+#define yyval	   @YACC_PREFIX@val
+#define yylloc	   @YACC_PREFIX@lloc
+#define yyreds	   @YACC_PREFIX@reds
+#define yytoks	   @YACC_PREFIX@toks
+#define yylhs	   @YACC_PREFIX@yylhs
+#define yylen	   @YACC_PREFIX@yylen
+#define yydefred   @YACC_PREFIX@yydefred
+#define yydgoto	   @YACC_PREFIX@yydgoto
+#define yysindex   @YACC_PREFIX@yysindex
+#define yyrindex   @YACC_PREFIX@yyrindex
+#define yygindex   @YACC_PREFIX@yygindex
+#define yytable	   @YACC_PREFIX@yytable
+#define yycheck	   @YACC_PREFIX@yycheck
+#define yyname	   @YACC_PREFIX@yyname
+#define yyrule	   @YACC_PREFIX@yyrule
+
+#endif
