@@ -97,13 +97,15 @@ DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = include/atiling/macros.h
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_atiling_OBJECTS = src/atiling-main.$(OBJEXT) \
-	src/atiling-loop_info.$(OBJEXT)
+	src/atiling-loop_info.$(OBJEXT) src/atiling-parser.$(OBJEXT) \
+	src/atiling-scanner.$(OBJEXT) src/atiling-atiling.$(OBJEXT) \
+	src/atiling-options.$(OBJEXT)
 atiling_OBJECTS = $(am_atiling_OBJECTS)
 atiling_DEPENDENCIES = $(LIBOBJS)
 AM_V_P = $(am__v_P_$(V))
@@ -121,8 +123,11 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.
 depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = src/$(DEPDIR)/atiling-loop_info.Po \
-	src/$(DEPDIR)/atiling-main.Po
+am__depfiles_remade = src/$(DEPDIR)/atiling-atiling.Po \
+	src/$(DEPDIR)/atiling-loop_info.Po \
+	src/$(DEPDIR)/atiling-main.Po src/$(DEPDIR)/atiling-options.Po \
+	src/$(DEPDIR)/atiling-parser.Po \
+	src/$(DEPDIR)/atiling-scanner.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -140,6 +145,19 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
+LEXCOMPILE = $(LEX) $(AM_LFLAGS) $(LFLAGS)
+AM_V_LEX = $(am__v_LEX_$(V))
+am__v_LEX_ = $(am__v_LEX_$(AM_DEFAULT_VERBOSITY))
+am__v_LEX_0 = @echo "  LEX     " $@;
+am__v_LEX_1 = 
+YLWRAP = $(top_srcdir)/autoconf/ylwrap
+am__yacc_c2h = sed -e s/cc$$/hh/ -e s/cpp$$/hpp/ -e s/cxx$$/hxx/ \
+		   -e s/c++$$/h++/ -e s/c$$/h/
+YACCCOMPILE = $(YACC) $(AM_YFLAGS) $(YFLAGS)
+AM_V_YACC = $(am__v_YACC_$(V))
+am__v_YACC_ = $(am__v_YACC_$(AM_DEFAULT_VERBOSITY))
+am__v_YACC_0 = @echo "  YACC    " $@;
+am__v_YACC_1 = 
 SOURCES = $(atiling_SOURCES)
 DIST_SOURCES = $(atiling_SOURCES)
 am__can_run_installinfo = \
@@ -171,9 +189,11 @@ AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/autoconf/compile \
 	$(top_srcdir)/autoconf/depcomp \
 	$(top_srcdir)/autoconf/install-sh \
-	$(top_srcdir)/autoconf/missing autoconf/compile \
-	autoconf/depcomp autoconf/install-sh autoconf/missing compile \
-	depcomp install-sh missing
+	$(top_srcdir)/autoconf/missing $(top_srcdir)/autoconf/ylwrap \
+	$(top_srcdir)/include/atiling/macros.h.in autoconf/compile \
+	autoconf/depcomp autoconf/install-sh autoconf/missing \
+	autoconf/ylwrap compile depcomp install-sh missing \
+	src/parser.c src/parser.h src/scanner.c
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -207,7 +227,7 @@ CLAN_LIBS = -lclan
 CPP = gcc -E
 CPPFLAGS = -g -O2
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"atiling\" -DPACKAGE_TARNAME=\"atiling\" -DPACKAGE_VERSION=\"0.1.0\" -DPACKAGE_STRING=\"atiling\ 0.1.0\" -DPACKAGE_BUGREPORT=\"BUG-REPORT-ADDRESS\" -DPACKAGE_URL=\"\" -DPACKAGE=\"atiling\" -DVERSION=\"0.1.0\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_STRDUP=1 -DHAVE_LIBOSL=1 -DHAVE_LIBCLAN=1
+DEFS = -DPACKAGE_NAME=\"atiling\" -DPACKAGE_TARNAME=\"atiling\" -DPACKAGE_VERSION=\"0.1.0\" -DPACKAGE_STRING=\"atiling\ 0.1.0\" -DPACKAGE_BUGREPORT=\"BUG-REPORT-ADDRESS\" -DPACKAGE_URL=\"\" -DPACKAGE=\"atiling\" -DVERSION=\"0.1.0\" -DYYTEXT_POINTER=1 -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_LIBINTL_H=1 -DHAVE_LIMITS_H=1 -DHAVE_MALLOC_H=1 -DHAVE_STDDEF_H=1 -DHAVE_STDINT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_UNISTD_H=1 -DHAVE_PTRDIFF_T=1 -DHAVE_MEMSET=1 -DHAVE_STRDUP=1 -DHAVE_LIBOSL=1 -DHAVE_LIBCLAN=1
 DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
@@ -221,6 +241,9 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
+LEX = flex
+LEXLIB = -lfl
+LEX_OUTPUT_ROOT = lex.yy
 LIBOBJS = 
 LIBS = -lclan -losl 
 LTLIBOBJS = 
@@ -245,6 +268,8 @@ VERSION = 0.1.0
 VERSION_MAJOR = 
 VERSION_MINOR = 
 VERSION_REVISION = 
+YACC = bison -y
+YFLAGS = 
 abs_builddir = /mnt
 abs_srcdir = /mnt
 abs_top_builddir = /mnt
@@ -294,15 +319,25 @@ ATILING_INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
 ################################################################################
 AM_CFLAGS = $(CFLAGS_WARN)
 AM_CPPFLAGS = $(ATILING_INCLUDES) -I/usr/local//include -I/usr/local//include
+AM_YFLAGS = -y -d
+BUILT_SOURCES = src/parser.h
 
 ################################################################################
 atiling_CPPFLAGS = $(ATILING_INCLUDES) -I/usr/local//include -I/usr/local//include
-atiling_SOURCES = src/main.c src/loop_info.c
+atiling_SOURCES = \
+        src/main.c \
+        src/loop_info.c \
+        src/parser.y \
+        src/scanner.l \
+        src/atiling.c \
+        src/options.c
+
 atiling_LDADD = $(LIBOBJS)
-all: all-am
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .l .o .obj .y
 am--refresh: Makefile
 	@:
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -336,6 +371,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
+include/atiling/macros.h: $(top_builddir)/config.status $(top_srcdir)/include/atiling/macros.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -388,6 +425,17 @@ src/atiling-main.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/atiling-loop_info.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/parser.h: src/parser.c
+	@if test ! -f $@; then rm -f src/parser.c; else :; fi
+	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) src/parser.c; else :; fi
+src/atiling-parser.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/atiling-scanner.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/atiling-atiling.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/atiling-options.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 atiling$(EXEEXT): $(atiling_OBJECTS) $(atiling_DEPENDENCIES) $(EXTRA_atiling_DEPENDENCIES) 
 	@rm -f atiling$(EXEEXT)
@@ -400,8 +448,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include src/$(DEPDIR)/atiling-atiling.Po # am--include-marker
 include src/$(DEPDIR)/atiling-loop_info.Po # am--include-marker
 include src/$(DEPDIR)/atiling-main.Po # am--include-marker
+include src/$(DEPDIR)/atiling-options.Po # am--include-marker
+include src/$(DEPDIR)/atiling-parser.Po # am--include-marker
+include src/$(DEPDIR)/atiling-scanner.Po # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -452,6 +504,68 @@ src/atiling-loop_info.obj: src/loop_info.c
 #	$(AM_V_CC)source='src/loop_info.c' object='src/atiling-loop_info.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-loop_info.obj `if test -f 'src/loop_info.c'; then $(CYGPATH_W) 'src/loop_info.c'; else $(CYGPATH_W) '$(srcdir)/src/loop_info.c'; fi`
+
+src/atiling-parser.o: src/parser.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-parser.o -MD -MP -MF src/$(DEPDIR)/atiling-parser.Tpo -c -o src/atiling-parser.o `test -f 'src/parser.c' || echo '$(srcdir)/'`src/parser.c
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-parser.Tpo src/$(DEPDIR)/atiling-parser.Po
+#	$(AM_V_CC)source='src/parser.c' object='src/atiling-parser.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-parser.o `test -f 'src/parser.c' || echo '$(srcdir)/'`src/parser.c
+
+src/atiling-parser.obj: src/parser.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-parser.obj -MD -MP -MF src/$(DEPDIR)/atiling-parser.Tpo -c -o src/atiling-parser.obj `if test -f 'src/parser.c'; then $(CYGPATH_W) 'src/parser.c'; else $(CYGPATH_W) '$(srcdir)/src/parser.c'; fi`
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-parser.Tpo src/$(DEPDIR)/atiling-parser.Po
+#	$(AM_V_CC)source='src/parser.c' object='src/atiling-parser.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-parser.obj `if test -f 'src/parser.c'; then $(CYGPATH_W) 'src/parser.c'; else $(CYGPATH_W) '$(srcdir)/src/parser.c'; fi`
+
+src/atiling-scanner.o: src/scanner.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-scanner.o -MD -MP -MF src/$(DEPDIR)/atiling-scanner.Tpo -c -o src/atiling-scanner.o `test -f 'src/scanner.c' || echo '$(srcdir)/'`src/scanner.c
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-scanner.Tpo src/$(DEPDIR)/atiling-scanner.Po
+#	$(AM_V_CC)source='src/scanner.c' object='src/atiling-scanner.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-scanner.o `test -f 'src/scanner.c' || echo '$(srcdir)/'`src/scanner.c
+
+src/atiling-scanner.obj: src/scanner.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-scanner.obj -MD -MP -MF src/$(DEPDIR)/atiling-scanner.Tpo -c -o src/atiling-scanner.obj `if test -f 'src/scanner.c'; then $(CYGPATH_W) 'src/scanner.c'; else $(CYGPATH_W) '$(srcdir)/src/scanner.c'; fi`
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-scanner.Tpo src/$(DEPDIR)/atiling-scanner.Po
+#	$(AM_V_CC)source='src/scanner.c' object='src/atiling-scanner.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-scanner.obj `if test -f 'src/scanner.c'; then $(CYGPATH_W) 'src/scanner.c'; else $(CYGPATH_W) '$(srcdir)/src/scanner.c'; fi`
+
+src/atiling-atiling.o: src/atiling.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-atiling.o -MD -MP -MF src/$(DEPDIR)/atiling-atiling.Tpo -c -o src/atiling-atiling.o `test -f 'src/atiling.c' || echo '$(srcdir)/'`src/atiling.c
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-atiling.Tpo src/$(DEPDIR)/atiling-atiling.Po
+#	$(AM_V_CC)source='src/atiling.c' object='src/atiling-atiling.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-atiling.o `test -f 'src/atiling.c' || echo '$(srcdir)/'`src/atiling.c
+
+src/atiling-atiling.obj: src/atiling.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-atiling.obj -MD -MP -MF src/$(DEPDIR)/atiling-atiling.Tpo -c -o src/atiling-atiling.obj `if test -f 'src/atiling.c'; then $(CYGPATH_W) 'src/atiling.c'; else $(CYGPATH_W) '$(srcdir)/src/atiling.c'; fi`
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-atiling.Tpo src/$(DEPDIR)/atiling-atiling.Po
+#	$(AM_V_CC)source='src/atiling.c' object='src/atiling-atiling.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-atiling.obj `if test -f 'src/atiling.c'; then $(CYGPATH_W) 'src/atiling.c'; else $(CYGPATH_W) '$(srcdir)/src/atiling.c'; fi`
+
+src/atiling-options.o: src/options.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-options.o -MD -MP -MF src/$(DEPDIR)/atiling-options.Tpo -c -o src/atiling-options.o `test -f 'src/options.c' || echo '$(srcdir)/'`src/options.c
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-options.Tpo src/$(DEPDIR)/atiling-options.Po
+#	$(AM_V_CC)source='src/options.c' object='src/atiling-options.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-options.o `test -f 'src/options.c' || echo '$(srcdir)/'`src/options.c
+
+src/atiling-options.obj: src/options.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/atiling-options.obj -MD -MP -MF src/$(DEPDIR)/atiling-options.Tpo -c -o src/atiling-options.obj `if test -f 'src/options.c'; then $(CYGPATH_W) 'src/options.c'; else $(CYGPATH_W) '$(srcdir)/src/options.c'; fi`
+	$(AM_V_at)$(am__mv) src/$(DEPDIR)/atiling-options.Tpo src/$(DEPDIR)/atiling-options.Po
+#	$(AM_V_CC)source='src/options.c' object='src/atiling-options.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(atiling_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/atiling-options.obj `if test -f 'src/options.c'; then $(CYGPATH_W) 'src/options.c'; else $(CYGPATH_W) '$(srcdir)/src/options.c'; fi`
+
+.l.c:
+	$(AM_V_LEX)$(am__skiplex) $(SHELL) $(YLWRAP) $< $(LEX_OUTPUT_ROOT).c $@ -- $(LEXCOMPILE)
+
+.y.c:
+	$(AM_V_YACC)$(am__skipyacc) $(SHELL) $(YLWRAP) $< y.tab.c $@ y.tab.h `echo $@ | $(am__yacc_c2h)` y.output $*.output -- $(YACCCOMPILE)
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -679,13 +793,15 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(PROGRAMS)
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -717,14 +833,22 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-rm -f src/parser.c
+	-rm -f src/parser.h
+	-rm -f src/scanner.c
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-		-rm -f src/$(DEPDIR)/atiling-loop_info.Po
+		-rm -f src/$(DEPDIR)/atiling-atiling.Po
+	-rm -f src/$(DEPDIR)/atiling-loop_info.Po
 	-rm -f src/$(DEPDIR)/atiling-main.Po
+	-rm -f src/$(DEPDIR)/atiling-options.Po
+	-rm -f src/$(DEPDIR)/atiling-parser.Po
+	-rm -f src/$(DEPDIR)/atiling-scanner.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -772,8 +896,12 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-		-rm -f src/$(DEPDIR)/atiling-loop_info.Po
+		-rm -f src/$(DEPDIR)/atiling-atiling.Po
+	-rm -f src/$(DEPDIR)/atiling-loop_info.Po
 	-rm -f src/$(DEPDIR)/atiling-main.Po
+	-rm -f src/$(DEPDIR)/atiling-options.Po
+	-rm -f src/$(DEPDIR)/atiling-parser.Po
+	-rm -f src/$(DEPDIR)/atiling-scanner.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -791,7 +919,7 @@ ps-am:
 
 uninstall-am: uninstall-binPROGRAMS
 
-.MAKE: install-am install-strip
+.MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles am--refresh check \
 	check-am clean clean-binPROGRAMS clean-cscope clean-generic \

@@ -6,4 +6,5 @@ TabWidth: 4
 AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AlignConsecutiveAssignments: true
-AlignEscapedNewlines : Left
+AlignEscapedNewlines: Left
+AlignConsecutiveMacros: AcrossEmptyLines

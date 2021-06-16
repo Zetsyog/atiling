@@ -28,18 +28,36 @@ dnl ############################################################################
 
 dnl # Checks for program
 AC_PROG_CC
-
-dnl # Checks for libraries
+AC_PROG_LEX
+AC_PROG_YACC
 
 dnl # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdio.h stdlib.h string.h])
+AC_CHECK_HEADERS([ \
+  inttypes.h \
+  libintl.h \
+  limits.h \
+  malloc.h \
+  stddef.h \
+  stdint.h \
+  stdlib.h \
+  string.h \
+  unistd.h
+])
+
 
 dnl # Checks for typedefs, structures, and compiler characteristics.
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT8_T
 AC_TYPE_SIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
+AC_CHECK_TYPES([ptrdiff_t])
 
 dnl # Checks for library functions.
-AC_CHECK_FUNCS([strdup])
+AC_CHECK_FUNCS([memset strdup])
 
 dnl ############################################################################
 dnl #                          OpenScop Library                                #
@@ -112,6 +130,10 @@ AC_SUBST(VERSION_MINOR)
 AC_SUBST(VERSION_REVISION)
 
 dnl # Config Makefile
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+  Makefile
+  include/atiling/macros.h
+])
+
 AC_OUTPUT
 

@@ -2,7 +2,12 @@
 .vscode/
 
 # Generated executable
-atiling
+/atiling
+
+# Generated source files
+src/parser.c
+src/parser.h
+src/scanner.c
 
 # Log files
 *.log
