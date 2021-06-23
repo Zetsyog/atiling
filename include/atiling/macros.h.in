@@ -14,6 +14,7 @@
 #define ATILING_GEN_STR_PCMAX	 "_pcmax"
 #define ATILING_GEN_STR_EHRHART	 "_Ehrhart"
 #define ATILING_GEN_STR_TILEVOL	 "TILE_VOL_L"
+#define ATILING_GEN_STR_TRAHRHE	 "trahrhe_"
 
 /*----------------------------------------------------------------------------+
  |                               UTILITY MACROS                               |

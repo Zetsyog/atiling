@@ -23,7 +23,7 @@ atiling_SOURCES = \
         src/scanner.l \
         src/atiling.c \
         src/options.c \
-        src/pragma.c \
+        src/fragment.c \
         src/gen.c
 
 atiling_LDADD = $(LIBOBJS)

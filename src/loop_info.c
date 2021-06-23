@@ -112,8 +112,10 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 
 		osl_body_p body = st_ext->data;
 
-		if (index < osl_strings_size(body->iterators)) {
-			break;
+		if (body != NULL) {
+			if (index < osl_strings_size(body->iterators)) {
+				break;
+			}
 		}
 
 		statement = statement->next;
@@ -132,17 +134,26 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	osl_body_p body =
 		(osl_body_p)osl_generic_lookup(statement->extension, OSL_URI_BODY);
 	if (body && body->iterators != NULL) {
+		if (info->string_names->iterators != NULL) {
+			osl_strings_free(info->string_names->iterators);
+		}
 		info->string_names->iterators = body->iterators;
 	}
 
 	// If possible, replace parameter names with scop parameter names.
 	if (osl_generic_has_URI(scop->parameters, OSL_URI_STRINGS)) {
+		if (info->string_names->parameters != NULL) {
+			osl_strings_free(info->string_names->parameters);
+		}
 		info->string_names->parameters = scop->parameters->data;
 	}
 
 	// If possible, replace array names with arrays extension names.
 	osl_arrays_p arrays = osl_generic_lookup(scop->extension, OSL_URI_ARRAYS);
 	if (arrays != NULL) {
+		if (info->string_names->arrays != NULL) {
+			osl_strings_free(info->string_names->arrays);
+		}
 		info->string_names->arrays = osl_arrays_to_strings(arrays);
 	}
 
@@ -157,7 +168,6 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	osl_int_init_set_si(domain->precision, &zero, 0);
 
 	for (int i = 0; i < domain->nb_rows; i++) {
-
 		// if m[i][1 + index] > 0
 		// ie rel of type loop iterator >= x
 		if (osl_int_gt(domain->precision, domain->m[i][1 + index], zero)) {

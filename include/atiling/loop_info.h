@@ -11,6 +11,8 @@ struct loop_info {
 	osl_relation_p relation;
 	int start_row;
 	int end_row;
+	char *ub; /**< Upper bound */
+	char *lb; /**< Lower bound */
 };
 
 typedef struct loop_info loop_info_t;

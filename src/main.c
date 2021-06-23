@@ -11,13 +11,17 @@ int main(int argc, char **argv) {
 	options = atiling_options_read(argc, argv, &input, &output);
 
 	if (options->name != NULL) {
-		atiling_pragma_p *pragma = atiling_extract(input, options);
+		atiling_fragment_p *fragment = atiling_extract(input, options);
 
-		for (int i = 0; pragma[i] != NULL; i++) {
-			atiling_pragma_idump(stdout, pragma[i], 0);
+		for (int i = 0; fragment[i] != NULL; i++) {
+			atiling_fragment_idump(stdout, fragment[i], 0);
 		}
 
-		atiling_gen(input, output, pragma);
+		atiling_gen(input, output, fragment);
+
+		for (int i = 0; fragment[i] != NULL; i++) {
+			atiling_fragment_free(fragment[i]);
+		};
 
 		fclose(input);
 	}

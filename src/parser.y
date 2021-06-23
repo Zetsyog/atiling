@@ -5,14 +5,14 @@
 
     #include "atiling/macros.h"
     #include "atiling/options.h"
-    #include "atiling/pragma.h"
+    #include "atiling/fragment.h"
 
     extern FILE* yyin;                     /**< File to be read by Lex */
     extern int   scanner_pragma;           /**< Are we inside pragma? */
     extern int   scanner_pragma_header;    /**< Are we parsing pragma header? */
     extern int   scanner_line;
     extern int   scanner_column;
-    extern atiling_pragma_p *scanner_pragmas;
+    extern atiling_fragment_p *scanner_fragments;
 
     int  yylex(void);
     void yyerror(char*);
@@ -73,6 +73,10 @@ instr_list:
 arg_list:
       arg { 
             ATILING_malloc($$.values, char **, sizeof(char *) * 2);
+            if($1[0] == '1' && $1[1] == 0) {
+                $1[0] = 0;
+            }
+
             $$.values[0] = $1;
             $$.values[1] = NULL;
             $$.size = 1;
@@ -81,10 +85,12 @@ arg_list:
             }
         }
     | arg_list ',' arg {
-            
             ATILING_realloc($1.values, char **, sizeof(char *) * ($1.size + 2));
             $$.size = $1.size + 1;
             $$.values = $1.values;
+            if($3[0] == '1' && $3[1] == 0) {
+                $3[0] = 0;
+            }
             $$.values[$$.size - 1] = $3;
             $$.values[$$.size] = NULL;
             if(ATILING_DEBUG) {
@@ -144,7 +150,7 @@ void yyerror(char *s) {
     }
 }
 
-atiling_pragma_p *atiling_parse(FILE *input, atiling_options_p options) {
+atiling_fragment_p *atiling_parse(FILE *input, atiling_options_p options) {
     yyin = input;
     input_name = options->name;
 
@@ -154,5 +160,5 @@ atiling_pragma_p *atiling_parse(FILE *input, atiling_options_p options) {
 
     ATILING_debug("parsing done");
 
-    return scanner_pragmas;
+    return scanner_fragments;
 }
