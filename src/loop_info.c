@@ -179,7 +179,6 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	}
 
 	osl_int_clear(domain->precision, &zero);
-
 	return info;
 }
 
@@ -208,6 +207,71 @@ void loop_info_dump(FILE *file, loop_info_p info) {
 
 	fprintf(file, "end :\n\t");
 	loop_info_dump_relation(file, info, info->end_row);
+}
+
+void loop_info_lb_print(FILE *file, loop_info_p info) {
+	char **name_array =
+		osl_relation_strings(info->relation, info->string_names);
+
+	fprintf(stderr, "dim=%i\n", info->relation->nb_columns);
+	fprintf(stderr, "rel= 0\n");
+	fprintf(file, "0 ");
+
+	for (int i = 1; i < info->relation->nb_columns; i++) {
+		if (osl_int_zero(info->relation->precision,
+						 info->relation->m[info->start_row][i]))
+			continue;
+
+		if (i == 1 + info->index) {
+			continue;
+		}
+
+		fprintf(file, "+");
+
+		osl_int_print(file, info->relation->precision,
+					  info->relation->m[info->start_row][i]);
+		fprintf(file, " * %s ", name_array[i]);
+	}
+
+	// Free the array of strings.
+	if (name_array != NULL) {
+		for (int i = 0; i < info->relation->nb_columns; i++)
+			free(name_array[i]);
+		free(name_array);
+	}
+}
+
+void loop_info_ub_print(FILE *file, loop_info_p info) {
+	char **name_array =
+		osl_relation_strings(info->relation, info->string_names);
+
+	fprintf(stderr, "dim=%i\n", info->relation->nb_columns);
+	fprintf(stderr, "rel= 0\n");
+
+	fprintf(file, "0 ");
+
+	for (int i = 1; i < info->relation->nb_columns; i++) {
+		if (osl_int_zero(info->relation->precision,
+						 info->relation->m[info->end_row][i]))
+			continue;
+
+		if (i == 1 + info->index) {
+			continue;
+		}
+
+		fprintf(file, "+");
+
+		osl_int_print(file, info->relation->precision,
+					  info->relation->m[info->end_row][i]);
+		fprintf(file, " * %s ", name_array[i]);
+	}
+
+	// Free the array of strings.
+	if (name_array != NULL) {
+		for (int i = 0; i < info->relation->nb_columns; i++)
+			free(name_array[i]);
+		free(name_array);
+	}
 }
 
 void loop_info_free(loop_info_p info) {

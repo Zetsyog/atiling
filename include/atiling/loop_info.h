@@ -21,6 +21,8 @@ typedef struct loop_info *loop_info_p;
 void loop_info_dump(FILE *, loop_info_p info);
 void loop_info_free(loop_info_p info);
 loop_info_p loop_info_get(osl_scop_p scop, size_t index);
+void loop_info_lb_print(FILE *file, loop_info_p info);
+void loop_info_ub_print(FILE *file, loop_info_p info);
 
 size_t count_nested_loop(osl_scop_p scop);
 

@@ -148,17 +148,22 @@ void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
 							 int ilevel) {
 	for (int i = 0; i < fragment->loop_count; i++) {
-		atiling_gen_indent(output, ilevel + 1 + i);
-		fprintf(output, "// TODO for\n");
 		char *x = fragment->loops[i]->name;
+
 		atiling_gen_indent(output, ilevel + 1 + i);
 
 		if (fragment->divs[i][0] == 0 && fragment->divs[i][1] == 0) {
-			fprintf(output, "// for normal\n");
+			fprintf(output, "for(long int %s = ", x);
+			loop_info_lb_print(output, fragment->loops[i]);
+			fprintf(output, " ; %s <= ", x);
+			loop_info_ub_print(output, fragment->loops[i]);
+			fprintf(output, " ; %s++) {\n", x);
 		} else {
-			fprintf(output,
-					"for(%s = max(0, lb%s); %s < min(TODO, ); %s++) {\n", x, x,
-					x, x);
+			fprintf(output, "for(long int %s = max(", x);
+			loop_info_lb_print(output, fragment->loops[i]);
+			fprintf(output, ",lb%s); %s <= min(", x, x);
+			loop_info_ub_print(output, fragment->loops[i]);
+			fprintf(output, ", ub%s); %s++) {\n", x, x);
 		}
 
 		osl_statement_p statement = fragment->scop->statement;
