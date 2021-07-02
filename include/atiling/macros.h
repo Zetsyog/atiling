@@ -15,6 +15,7 @@
 #define ATILING_GEN_STR_EHRHART	 "_Ehrhart"
 #define ATILING_GEN_STR_TILEVOL	 "TILE_VOL_L"
 #define ATILING_GEN_STR_TRAHRHE	 "trahrhe_"
+#define ATILING_GEN_VAR_TYPE	 "long int"
 
 /*----------------------------------------------------------------------------+
  |                               UTILITY MACROS                               |

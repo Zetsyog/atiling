@@ -28,11 +28,10 @@ dnl ############################################################################
 
 dnl # Checks for program
 AC_PROG_CC
-AC_PROG_LEX
+AC_PROG_LEX([noyywrap])
 AC_PROG_YACC
 
 dnl # Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS([ \
   inttypes.h \
   libintl.h \

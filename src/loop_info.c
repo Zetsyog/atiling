@@ -103,6 +103,14 @@ void get_iterator_name(loop_info_p info, osl_statement_p statement) {
 }
 
 loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
+	int parameters_backedup			= 0;
+	int arrays_backedup				= 0;
+	int iterators_backedup			= 0;
+	osl_strings_p parameters_backup = NULL;
+	osl_strings_p iterators_backup	= NULL;
+	osl_strings_p arrays_backup		= NULL;
+	osl_names_p names;
+
 	loop_info_p info = calloc(1, sizeof(loop_info_t));
 
 	osl_statement_p statement = scop->statement;
@@ -128,34 +136,6 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 
 	info->index = index;
 	get_iterator_name(info, statement);
-	info->string_names = osl_scop_names(scop);
-
-	// If possible, replace iterator names with statement iterator names.
-	osl_body_p body =
-		(osl_body_p)osl_generic_lookup(statement->extension, OSL_URI_BODY);
-	if (body && body->iterators != NULL) {
-		if (info->string_names->iterators != NULL) {
-			osl_strings_free(info->string_names->iterators);
-		}
-		info->string_names->iterators = body->iterators;
-	}
-
-	// If possible, replace parameter names with scop parameter names.
-	if (osl_generic_has_URI(scop->parameters, OSL_URI_STRINGS)) {
-		if (info->string_names->parameters != NULL) {
-			osl_strings_free(info->string_names->parameters);
-		}
-		info->string_names->parameters = scop->parameters->data;
-	}
-
-	// If possible, replace array names with arrays extension names.
-	osl_arrays_p arrays = osl_generic_lookup(scop->extension, OSL_URI_ARRAYS);
-	if (arrays != NULL) {
-		if (info->string_names->arrays != NULL) {
-			osl_strings_free(info->string_names->arrays);
-		}
-		info->string_names->arrays = osl_arrays_to_strings(arrays);
-	}
 
 	osl_relation_p domain = statement->domain;
 
@@ -163,7 +143,6 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 		loop_info_free(info);
 		return NULL;
 	}
-
 	osl_int_t zero;
 	osl_int_init_set_si(domain->precision, &zero, 0);
 
@@ -179,22 +158,71 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	}
 
 	osl_int_clear(domain->precision, &zero);
+
+	// Generate names for loop
+	names = osl_scop_names(scop);
+
+	// If possible, replace parameter names with scop parameter names.
+	if (osl_generic_has_URI(scop->parameters, OSL_URI_STRINGS)) {
+		parameters_backedup = 1;
+		parameters_backup	= names->parameters;
+		names->parameters	= scop->parameters->data;
+	}
+
+	// If possible, replace array names with arrays extension names.
+	osl_arrays_p arrays = osl_generic_lookup(scop->extension, OSL_URI_ARRAYS);
+	if (arrays != NULL) {
+		arrays_backedup = 1;
+		arrays_backup	= names->parameters;
+		names->arrays	= osl_arrays_to_strings(arrays);
+	}
+
+	// If possible, replace iterator names with statement iterator names.
+	osl_body_p body =
+		(osl_body_p)osl_generic_lookup(statement->extension, OSL_URI_BODY);
+	if (body && body->iterators != NULL) {
+		if (names->iterators != NULL) {
+			osl_strings_free(names->iterators);
+		}
+		names->iterators = body->iterators;
+	}
+
+	// link col index with accurate names
+	info->name_array = osl_relation_strings(info->relation, names);
+
+	info->parameters_names = osl_strings_malloc();
+	unsigned int i		   = 0;
+	while (names->parameters->string[i] != NULL) {
+		osl_strings_add(info->parameters_names, names->parameters->string[i]);
+		i++;
+	}
+
+	// If necessary, switch back parameter names.
+	if (parameters_backedup) {
+		parameters_backedup = 0;
+		names->parameters	= parameters_backup;
+	}
+
+	// If necessary, switch back array names.
+	if (arrays_backedup) {
+		arrays_backedup = 0;
+		osl_strings_free(names->arrays);
+		names->arrays = arrays_backup;
+	}
+	// If necessary, switch back iterator names.
+	if (iterators_backedup) {
+		iterators_backedup = 0;
+		names->iterators   = iterators_backup;
+	}
+
 	return info;
 }
 
 void loop_info_dump_relation(FILE *file, loop_info_p info, int row) {
-	char **name_array =
-		osl_relation_strings(info->relation, info->string_names);
 
-	char *exp = osl_relation_expression(info->relation, row, name_array);
+	char *exp = osl_relation_expression(info->relation, row, info->name_array);
 	fprintf(file, "%s >=0\n", exp);
 
-	// Free the array of strings.
-	if (name_array != NULL) {
-		for (int i = 0; i < info->relation->nb_columns; i++)
-			free(name_array[i]);
-		free(name_array);
-	}
 	free(exp);
 }
 
@@ -209,69 +237,38 @@ void loop_info_dump(FILE *file, loop_info_p info) {
 	loop_info_dump_relation(file, info, info->end_row);
 }
 
-void loop_info_lb_print(FILE *file, loop_info_p info) {
-	char **name_array =
-		osl_relation_strings(info->relation, info->string_names);
-
-	fprintf(stderr, "dim=%i\n", info->relation->nb_columns);
-	fprintf(stderr, "rel= 0\n");
-	fprintf(file, "0 ");
+void loop_info_bound_print(FILE *file, loop_info_p info, int row,
+						   char *dim_prefix) {
+	int written = ATILING_FALSE;
 
 	for (int i = 1; i < info->relation->nb_columns; i++) {
-		if (osl_int_zero(info->relation->precision,
-						 info->relation->m[info->start_row][i]))
+		if (osl_int_zero(info->relation->precision, info->relation->m[row][i]))
 			continue;
 
 		if (i == 1 + info->index) {
 			continue;
 		}
 
-		fprintf(file, "+");
+		if (written)
+			fprintf(file, "+");
 
-		osl_int_print(file, info->relation->precision,
-					  info->relation->m[info->start_row][i]);
-		fprintf(file, " * %s ", name_array[i]);
-	}
-
-	// Free the array of strings.
-	if (name_array != NULL) {
-		for (int i = 0; i < info->relation->nb_columns; i++)
-			free(name_array[i]);
-		free(name_array);
-	}
-}
-
-void loop_info_ub_print(FILE *file, loop_info_p info) {
-	char **name_array =
-		osl_relation_strings(info->relation, info->string_names);
-
-	fprintf(stderr, "dim=%i\n", info->relation->nb_columns);
-	fprintf(stderr, "rel= 0\n");
-
-	fprintf(file, "0 ");
-
-	for (int i = 1; i < info->relation->nb_columns; i++) {
-		if (osl_int_zero(info->relation->precision,
-						 info->relation->m[info->end_row][i]))
-			continue;
-
-		if (i == 1 + info->index) {
-			continue;
+		if (!osl_int_one(info->relation->precision,
+						 info->relation->m[row][i])) {
+			osl_int_print(file, info->relation->precision,
+						  info->relation->m[row][i]);
+			fprintf(file, " * ");
 		}
 
-		fprintf(file, "+");
-
-		osl_int_print(file, info->relation->precision,
-					  info->relation->m[info->end_row][i]);
-		fprintf(file, " * %s ", name_array[i]);
+		if (dim_prefix != NULL && i >= 1 &&
+			i < 1 + info->relation->nb_output_dims) {
+			fprintf(file, "%s%s ", dim_prefix, info->name_array[i]);
+		} else {
+			fprintf(file, "%s ", info->name_array[i]);
+		}
+		written = ATILING_TRUE;
 	}
-
-	// Free the array of strings.
-	if (name_array != NULL) {
-		for (int i = 0; i < info->relation->nb_columns; i++)
-			free(name_array[i]);
-		free(name_array);
-	}
+	if (written == ATILING_FALSE)
+		fprintf(file, "0 ");
 }
 
 void loop_info_free(loop_info_p info) {
@@ -279,6 +276,13 @@ void loop_info_free(loop_info_p info) {
 		if (info->name != NULL) {
 			free(info->name);
 		}
+		// Free the array of strings.
+		if (info->name_array != NULL) {
+			for (int i = 0; i < info->relation->nb_columns; i++)
+				free(info->name_array[i]);
+			free(info->name_array);
+		}
+		osl_strings_free(info->parameters_names);
 		free(info);
 	}
 }

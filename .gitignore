@@ -1,6 +1,10 @@
 # IDE
 .vscode/
 
+# tmp files
+output.c
+tmp.scop
+
 # Generated executable
 /atiling
 

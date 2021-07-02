@@ -5,7 +5,7 @@ int main(void) {
 	int i, j, k, alpha, N, M, div1;
 	float A[N][M], B[N][M], C[N][M], D[N][N][M];
 
-#pragma atiling(div1, 1, 32)
+#pragma atiling(div1, 16, 32)
 	for (i = 0; i < N; i++)
 		for (j = 0; j <= i; j++) {
 			B[i][j] += 2 * alpha;
@@ -17,5 +17,5 @@ int main(void) {
 		}
 
 #pragma endatiling
-	exit(1);
+	return 0;
 }

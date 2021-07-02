@@ -31,7 +31,7 @@ atiling_fragment_p *atiling_extract(FILE *input, atiling_options_p options) {
 		frags[i]->loop_count = count_nested_loop(frags[i]->scop);
 		ATILING_debug("loop count done");
 
-		frags[i]->loops = malloc(sizeof(loop_info_t) * frags[i]->loop_count);
+		frags[i]->loops = malloc(sizeof(loop_info_p) * frags[i]->loop_count);
 
 		for (int j = 0; j < frags[i]->loop_count; j++) {
 			frags[i]->loops[j] = loop_info_get(frags[i]->scop, j);

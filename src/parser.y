@@ -73,10 +73,6 @@ instr_list:
 arg_list:
       arg { 
             ATILING_malloc($$.values, char **, sizeof(char *) * 2);
-            if($1[0] == '1' && $1[1] == 0) {
-                $1[0] = 0;
-            }
-
             $$.values[0] = $1;
             $$.values[1] = NULL;
             $$.size = 1;
@@ -88,9 +84,6 @@ arg_list:
             ATILING_realloc($1.values, char **, sizeof(char *) * ($1.size + 2));
             $$.size = $1.size + 1;
             $$.values = $1.values;
-            if($3[0] == '1' && $3[1] == 0) {
-                $3[0] = 0;
-            }
             $$.values[$$.size - 1] = $3;
             $$.values[$$.size] = NULL;
             if(ATILING_DEBUG) {

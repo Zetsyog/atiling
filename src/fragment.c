@@ -16,14 +16,16 @@ atiling_fragment_p atiling_fragment_malloc() {
 }
 
 void atiling_fragment_free(atiling_fragment_p fragment) {
-	free(fragment->path);
-	for (int i = 0; fragment->divs[i] != NULL; i++) {
-		free(fragment->divs[i]);
-	}
-	osl_scop_free(fragment->scop);
 	for (int i = 0; i < fragment->loop_count; i++) {
 		loop_info_free(fragment->loops[i]);
 	}
+	free(fragment->loops);
+	for (int i = 0; fragment->divs[i] != NULL; i++) {
+		free(fragment->divs[i]);
+	}
+
+	osl_scop_free(fragment->scop);
+	free(fragment->path);
 	free(fragment->divs);
 	free(fragment);
 }
