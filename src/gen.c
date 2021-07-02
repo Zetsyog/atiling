@@ -7,6 +7,7 @@
 void atiling_gen_fragment(FILE *, atiling_fragment_p);
 void atiling_gen_trahrhe(atiling_fragment_p);
 void atiling_gen_iloop(FILE *, atiling_fragment_p, int, osl_strings_p, int);
+void gen_macros(FILE *);
 
 /**
  * @param input
@@ -21,9 +22,11 @@ void atiling_gen(FILE *input, FILE *output, atiling_fragment_p *fragment_list) {
 	int c;
 
 	if (input == NULL)
-		CLAN_error("null input");
+		ATILING_error("null input");
 
 	rewind(input);
+
+	gen_macros(output);
 
 	while ((c = fgetc(input)) != EOF) {
 		column++;
@@ -146,7 +149,7 @@ void atiling_gen_ifor_end(FILE *output, int level) {
 void atiling_gen_ilbx(FILE *output, char *x, char **params, int level,
 					  int ilevel) {
 	atiling_gen_indent(output, ilevel);
-	fprintf(output, "lb%s = %s%s(max(%st * (%s%i + 1), 1), ", x,
+	fprintf(output, "lb%s = %s%s%s(max(%st * (%s%i + 1), 1), ", x, x,
 			ATILING_GEN_STR_TRAHRHE, x, x, ATILING_GEN_STR_TILEVOL, level);
 
 	for (int i = 0; params[i] != NULL; i++) {
@@ -163,7 +166,7 @@ void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 	atiling_gen_indent(output, ilevel);
 
 	// trahrhe i(min(( it+1)∗(TILE VOL L1+1),i pcmax),N, M) − 1;
-	fprintf(output, "ub%s = %s%s(min((%st + 1) * (%s%i + 1), %s%s), ", x,
+	fprintf(output, "ub%s = %s%s%s(min((%st + 1) * (%s%i + 1), %s%s), ", x, x,
 			ATILING_GEN_STR_TRAHRHE, x, x, ATILING_GEN_STR_TILEVOL, level, x,
 			ATILING_GEN_STR_PCMAX);
 
@@ -184,7 +187,7 @@ void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
 		atiling_gen_indent(output, ilevel + 1 + i);
 
 		if (fragment->divs[i][0] == '1' && fragment->divs[i][1] == 0) {
-			fprintf(output, "for(%s %s = ", ATILING_GEN_VAR_TYPE, x);
+			fprintf(output, "for(%s = ", x);
 			loop_info_bound_print(output, fragment->loops[i],
 								  fragment->loops[i]->start_row, NULL);
 			fprintf(output, " ; %s <= ", x);
@@ -192,7 +195,7 @@ void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
 								  fragment->loops[i]->end_row, NULL);
 			fprintf(output, " ; %s++) {\n", x);
 		} else {
-			fprintf(output, "for(%s %s = max(", ATILING_GEN_VAR_TYPE, x);
+			fprintf(output, "for(%s = max(", x);
 			loop_info_bound_print(output, fragment->loops[i],
 								  fragment->loops[i]->start_row, NULL);
 			fprintf(output, ",lb%s); %s <= min(", x, x);
@@ -376,4 +379,10 @@ void atiling_gen_trahrhe(atiling_fragment_p fragment) {
 
 	cursor += sprintf(cmd + cursor, " }");
 	printf("%s\n", cmd);
+}
+
+void gen_macros(FILE *output) {
+	fprintf(output, "#include \"%s\"\n", ATILING_GEN_INCLUDE);
+	fprintf(output, "%s\n", ATILING_GEN_MIN);
+	fprintf(output, "%s\n", ATILING_GEN_MAX);
 }

@@ -1,21 +1,22 @@
 
 #include <stdio.h>
 
-int main(void) {
-	int i, j, k, alpha, N, M, div1;
-	float A[N][M], B[N][M], C[N][M], D[N][N][M];
+#define N 200
+#define M 200
 
-#pragma atiling(div1, 16, 32)
+int main(void) {
+	int alpha = 5, div1 = 8;
+	float A[N][M] = {0}, B[N][M] = {0}, C[N][M] = {0};
+
+#pragma trahrhe atiling(div1, 16, 32)
 	for (i = 0; i < N; i++)
 		for (j = 0; j <= i; j++) {
 			B[i][j] += 2 * alpha;
 			for (k = 0; k < M; k++) {
 				C[i][j] +=
 					A[j][k] * alpha * B[i][k] + B[j][k] * alpha * A[i][k];
-				D[i][j][k] = alpha * A[j][k];
 			}
 		}
-
-#pragma endatiling
+#pragma endtrahrhe
 	return 0;
 }

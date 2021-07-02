@@ -19,6 +19,9 @@ src/scanner.c
 # Tmp files
 *.tmp
 
+# autoconf
+/autoconf
+
 # C gitignore template (https://github.com/github/gitignore/blob/master/C.gitignore)
 # Prerequisites
 *.d

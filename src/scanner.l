@@ -37,7 +37,7 @@ IS          ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 %option nounput
 
 %%
-"#pragma"[ ]+"atiling"  {
+"#pragma"[ ]+"trahrhe"[ ]"atiling"  {
                         if (ATILING_DEBUG)
                             ATILING_debug("pragma atiling header start");
 
@@ -46,7 +46,7 @@ IS          ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
                         scanner_pragma_header = ATILING_TRUE;
                         return PRAGMA_BEGIN;
                     }
-"#pragma"[ ]+"endatiling" {
+"#pragma"[ ]+"endtrahrhe" {
                         if (ATILING_DEBUG)
                             ATILING_debug("pragma endatiling");
                         atiling_scanner_pragma_end();

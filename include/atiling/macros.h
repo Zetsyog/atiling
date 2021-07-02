@@ -14,8 +14,11 @@
 #define ATILING_GEN_STR_PCMAX	 "_pcmax"
 #define ATILING_GEN_STR_EHRHART	 "_Ehrhart"
 #define ATILING_GEN_STR_TILEVOL	 "TILE_VOL_L"
-#define ATILING_GEN_STR_TRAHRHE	 "trahrhe_"
+#define ATILING_GEN_STR_TRAHRHE	 "_trahrhe_"
 #define ATILING_GEN_VAR_TYPE	 "long int"
+#define ATILING_GEN_MIN			 "#define min(X, Y) (((X) < (Y)) ? (X) : (Y))"
+#define ATILING_GEN_MAX			 "#define max(X, Y) (((X) > (Y)) ? (X) : (Y))"
+#define ATILING_GEN_INCLUDE		 "trahrhe_tiling_header.h"
 
 /*----------------------------------------------------------------------------+
  |                               UTILITY MACROS                               |
