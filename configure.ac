@@ -121,6 +121,24 @@ AC_CHECK_LIB(clan, clan_symbol_malloc, [], [AC_MSG_ERROR("Can't find osl library
 LDFLAGS=$save_LDFLAGS
 
 dnl ############################################################################
+dnl #                            Pluto Library                                 #
+dnl ############################################################################
+AC_SUBST(PLUTO_CFLAGS)
+AC_SUBST(PLUTO_LIBS)
+AC_SUBST(PLUTO_LDFLAGS)
+
+AC_ARG_WITH([pluto_prefix],
+  [AS_HELP_STRING([--with-pluto-prefix],
+     [Prefix of pluto installation (default is /usr/local/)])],
+  [pluto_prefix=$withval],
+  [pluto_prefix=/usr/local/])
+
+PLUTO_CFLAGS="-I$clan_prefix/include"
+PLUTO_LDFLAGS="-L$clan_prefix/lib"
+PLUTO_LIBS="-lclan"
+
+
+dnl ############################################################################
 dnl #                            Substitutions                                 #
 dnl ############################################################################
 

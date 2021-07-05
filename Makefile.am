@@ -24,7 +24,8 @@ atiling_SOURCES = \
         src/atiling.c \
         src/options.c \
         src/fragment.c \
-        src/gen.c
+        src/gen.c \
+        src/transform.c
 
 atiling_LDADD = $(LIBOBJS)
 
