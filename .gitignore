@@ -12,6 +12,8 @@ tmp.scop
 src/parser.c
 src/parser.h
 src/scanner.c
+include/atiling/macros.h
+include/atiling/yacc.h
 
 # Log files
 *.log
