@@ -173,18 +173,17 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 	osl_arrays_p arrays = osl_generic_lookup(scop->extension, OSL_URI_ARRAYS);
 	if (arrays != NULL) {
 		arrays_backedup = 1;
-		arrays_backup	= names->parameters;
+		arrays_backup	= names->arrays;
 		names->arrays	= osl_arrays_to_strings(arrays);
 	}
 
-	// If possible, replace iterator names with statement iterator names.
+	// If possible, replace iterator names with statement iterator
 	osl_body_p body =
 		(osl_body_p)osl_generic_lookup(statement->extension, OSL_URI_BODY);
 	if (body && body->iterators != NULL) {
-		if (names->iterators != NULL) {
-			osl_strings_free(names->iterators);
-		}
-		names->iterators = body->iterators;
+		iterators_backedup = 1;
+		iterators_backup   = names->iterators;
+		names->iterators   = body->iterators;
 	}
 
 	// link col index with accurate names
@@ -209,12 +208,14 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 		osl_strings_free(names->arrays);
 		names->arrays = arrays_backup;
 	}
+
 	// If necessary, switch back iterator names.
 	if (iterators_backedup) {
 		iterators_backedup = 0;
 		names->iterators   = iterators_backup;
 	}
 
+	osl_names_free(names);
 	return info;
 }
 
