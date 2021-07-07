@@ -15,6 +15,7 @@ AC_CONFIG_SRCDIR([include/atiling/atiling.h])
 
 dnl --- Put as most as possible configuration files to an auxiliary dir
 AC_CONFIG_AUX_DIR(autoconf)
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl ############################################################################
 dnl #                          Init automake                                   #

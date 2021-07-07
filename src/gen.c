@@ -188,19 +188,19 @@ void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
 
 		if (fragment->divs[i][0] == '1' && fragment->divs[i][1] == 0) {
 			fprintf(output, "for(%s = ", x);
-			loop_info_bound_print(output, fragment->loops[i],
-								  fragment->loops[i]->start_row, NULL);
+			atiling_loop_info_bound_print(output, fragment->loops[i],
+										  fragment->loops[i]->start_row, NULL);
 			fprintf(output, " ; %s <= ", x);
-			loop_info_bound_print(output, fragment->loops[i],
-								  fragment->loops[i]->end_row, NULL);
+			atiling_loop_info_bound_print(output, fragment->loops[i],
+										  fragment->loops[i]->end_row, NULL);
 			fprintf(output, " ; %s++) {\n", x);
 		} else {
 			fprintf(output, "for(%s = max(", x);
-			loop_info_bound_print(output, fragment->loops[i],
-								  fragment->loops[i]->start_row, NULL);
+			atiling_loop_info_bound_print(output, fragment->loops[i],
+										  fragment->loops[i]->start_row, NULL);
 			fprintf(output, ",lb%s); %s <= min(", x, x);
-			loop_info_bound_print(output, fragment->loops[i],
-								  fragment->loops[i]->end_row, NULL);
+			atiling_loop_info_bound_print(output, fragment->loops[i],
+										  fragment->loops[i]->end_row, NULL);
 			fprintf(output, ", ub%s); %s++) {\n", x, x);
 		}
 
@@ -238,7 +238,7 @@ void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
 	atiling_gen_indent(output, ilevel);
 	// Last slice adjustment
 	fprintf(output, "if(%st == ub%st) ub%s = ", x, x, x);
-	loop_info_bound_print(output, info, info->end_row, "ub");
+	atiling_loop_info_bound_print(output, info, info->end_row, "ub");
 	fprintf(output, ";\n");
 }
 

@@ -30,13 +30,13 @@ int main(int argc, char **argv) {
 	// // Read the OpenScop file.
 	// scop = osl_scop_read(input);
 
-	// printf("%li\n", count_nested_loop(scop));
+	// printf("%li\n", atiling_count_nested_loop(scop));
 
-	// loop_info_p info = loop_info_get(scop, 2);
+	// loop_info_p info = atiling_loop_info_get(scop, 2);
 
-	// loop_info_dump(info);
+	// atiling_loop_info_dump(info);
 
-	// loop_info_free(info);
+	// atiling_loop_info_free(info);
 
 	// Dump the content of the scop data structure.
 	// osl_scop_dump(stdout, scop);

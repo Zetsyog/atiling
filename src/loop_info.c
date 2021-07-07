@@ -74,7 +74,7 @@ char **osl_relation_strings(const osl_relation_t *relation,
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-size_t count_nested_loop(osl_scop_p scop) {
+size_t atiling_count_nested_loop(osl_scop_p scop) {
 	size_t ret = 0;
 
 	osl_statement_p statement = scop->statement;
@@ -96,13 +96,13 @@ size_t count_nested_loop(osl_scop_p scop) {
 	return ret;
 }
 
-void get_iterator_name(loop_info_p info, osl_statement_p statement) {
+void atiling_get_iterator_name(loop_info_p info, osl_statement_p statement) {
 	osl_body_p body = statement->extension->data;
 
 	info->name = strdup(body->iterators->string[info->index]);
 }
 
-loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
+loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 	int parameters_backedup			= 0;
 	int arrays_backedup				= 0;
 	int iterators_backedup			= 0;
@@ -130,17 +130,17 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	}
 
 	if (statement == NULL) {
-		loop_info_free(info);
+		atiling_loop_info_free(info);
 		return NULL;
 	}
 
 	info->index = index;
-	get_iterator_name(info, statement);
+	atiling_get_iterator_name(info, statement);
 
 	osl_relation_p domain = statement->domain;
 
 	if (domain->type != OSL_TYPE_DOMAIN) {
-		loop_info_free(info);
+		atiling_loop_info_free(info);
 		return NULL;
 	}
 	osl_int_t zero;
@@ -173,18 +173,17 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 	osl_arrays_p arrays = osl_generic_lookup(scop->extension, OSL_URI_ARRAYS);
 	if (arrays != NULL) {
 		arrays_backedup = 1;
-		arrays_backup	= names->parameters;
+		arrays_backup	= names->arrays;
 		names->arrays	= osl_arrays_to_strings(arrays);
 	}
 
-	// If possible, replace iterator names with statement iterator names.
+	// If possible, replace iterator names with statement iterator
 	osl_body_p body =
 		(osl_body_p)osl_generic_lookup(statement->extension, OSL_URI_BODY);
 	if (body && body->iterators != NULL) {
-		if (names->iterators != NULL) {
-			osl_strings_free(names->iterators);
-		}
-		names->iterators = body->iterators;
+		iterators_backedup = 1;
+		iterators_backup   = names->iterators;
+		names->iterators   = body->iterators;
 	}
 
 	// link col index with accurate names
@@ -209,16 +208,19 @@ loop_info_p loop_info_get(osl_scop_p scop, size_t index) {
 		osl_strings_free(names->arrays);
 		names->arrays = arrays_backup;
 	}
+
 	// If necessary, switch back iterator names.
 	if (iterators_backedup) {
 		iterators_backedup = 0;
 		names->iterators   = iterators_backup;
 	}
 
+	osl_names_free(names);
 	return info;
 }
 
-void loop_info_dump_relation(FILE *file, loop_info_p info, int row) {
+void atiling_atiling_loop_info_dump_relation(FILE *file, loop_info_p info,
+											 int row) {
 
 	char *exp = osl_relation_expression(info->relation, row, info->name_array);
 	fprintf(file, "%s >=0\n", exp);
@@ -226,19 +228,19 @@ void loop_info_dump_relation(FILE *file, loop_info_p info, int row) {
 	free(exp);
 }
 
-void loop_info_dump(FILE *file, loop_info_p info) {
+void atiling_loop_info_dump(FILE *file, loop_info_p info) {
 	fprintf(file, "Loop index %li\n", info->index);
 	fprintf(file, "iterator name = %s\n", info->name);
 	fprintf(file, "start :\n\t");
-	loop_info_dump_relation(file, info, info->start_row);
+	atiling_atiling_loop_info_dump_relation(file, info, info->start_row);
 	fprintf(file, "\n");
 
 	fprintf(file, "end :\n\t");
-	loop_info_dump_relation(file, info, info->end_row);
+	atiling_atiling_loop_info_dump_relation(file, info, info->end_row);
 }
 
-void loop_info_bound_print(FILE *file, loop_info_p info, int row,
-						   char *dim_prefix) {
+void atiling_loop_info_bound_print(FILE *file, loop_info_p info, int row,
+								   char *dim_prefix) {
 	int written = ATILING_FALSE;
 
 	for (int i = 1; i < info->relation->nb_columns; i++) {
@@ -271,7 +273,7 @@ void loop_info_bound_print(FILE *file, loop_info_p info, int row,
 		fprintf(file, "0 ");
 }
 
-void loop_info_free(loop_info_p info) {
+void atiling_loop_info_free(loop_info_p info) {
 	if (info) {
 		if (info->name != NULL) {
 			free(info->name);

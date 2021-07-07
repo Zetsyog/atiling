@@ -28,13 +28,13 @@ atiling_fragment_p *atiling_extract(FILE *input, atiling_options_p options) {
 		ATILING_debug("done");
 
 		ATILING_debug("extracting loop info");
-		frags[i]->loop_count = count_nested_loop(frags[i]->scop);
+		frags[i]->loop_count = atiling_count_nested_loop(frags[i]->scop);
 		ATILING_debug("loop count done");
 
 		frags[i]->loops = malloc(sizeof(loop_info_p) * frags[i]->loop_count);
 
 		for (int j = 0; j < frags[i]->loop_count; j++) {
-			frags[i]->loops[j] = loop_info_get(frags[i]->scop, j);
+			frags[i]->loops[j] = atiling_loop_info_get(frags[i]->scop, j);
 		}
 		ATILING_debug("extracting loop info: done");
 
