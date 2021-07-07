@@ -17,7 +17,7 @@ atiling_fragment_p atiling_fragment_malloc() {
 
 void atiling_fragment_free(atiling_fragment_p fragment) {
 	for (int i = 0; i < fragment->loop_count; i++) {
-		loop_info_free(fragment->loops[i]);
+		atiling_loop_info_free(fragment->loops[i]);
 	}
 	free(fragment->loops);
 	for (int i = 0; fragment->divs[i] != NULL; i++) {
