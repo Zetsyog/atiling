@@ -4,6 +4,8 @@ bin_PROGRAMS = atiling
 
 ATILING_INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
 
+ACLOCAL_AMFLAGS = -I m4
+
 ################################################################################
 
 AM_CFLAGS = $(CFLAGS_WARN)
@@ -27,7 +29,7 @@ atiling_SOURCES = \
         src/gen.c \
         src/transform.c
 
-atiling_LDADD = $(LIBOBJS)
+atiling_LDADD = $(AC_LIBOBJ)
 
 
 

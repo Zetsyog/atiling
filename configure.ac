@@ -5,7 +5,6 @@ m4_define([version_minor], [1])
 m4_define([version_revision], [0])
 
 # Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.69])
 AC_INIT([atiling], [version_major.version_minor.version_revision], [BUG-REPORT-ADDRESS])
 
@@ -112,13 +111,13 @@ CLAN_LIBS="-lclan"
 dnl # Check the headers (without polluting CPPFLAGS)
 save_CPPFLAGS=$CFLAGS
 CPPFLAGS="$CPPFLAGS $CLAN_CFLAGS"
-AC_CHECK_HEADER(clan/clan.h, [], [AC_MSG_ERROR("Can't find osl headers.")])
+AC_CHECK_HEADER(clan/clan.h, [], [AC_MSG_ERROR("Can't find clan headers.")])
 CPPFLAGS=$save_CPPFLAGS
 
 dnl # Check the library (without polluting LDFLAGS)
 save_LDFLAGS=$LDFLAGS
 LDFLAGS="$LDFLAGS $CLAN_LDFLAGS"
-AC_CHECK_LIB(clan, clan_symbol_malloc, [], [AC_MSG_ERROR("Can't find osl library.")])
+AC_CHECK_LIB(clan, clan_symbol_malloc, [], [AC_MSG_ERROR("Can't find clan library.")])
 LDFLAGS=$save_LDFLAGS
 
 dnl ############################################################################
@@ -134,8 +133,8 @@ AC_ARG_WITH([pluto_prefix],
   [pluto_prefix=$withval],
   [pluto_prefix=/usr/local/])
 
-PLUTO_CFLAGS="-I$clan_prefix/include"
-PLUTO_LDFLAGS="-L$clan_prefix/lib"
+PLUTO_CFLAGS="-I$pluto_prefix/include"
+PLUTO_LDFLAGS="-L$pluto_prefix/lib"
 PLUTO_LIBS="-lclan"
 
 
