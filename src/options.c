@@ -3,14 +3,15 @@
 #include <string.h>
 
 /*+****************************************************************************
- *                         Memory deallocation function                       *
+ *                         Memory allocation function                         *
  ******************************************************************************/
 
 /**
- * atiling_options_malloc function:
+ * @brief Allocate a new clan_options_t
  * This functions allocate the memory space for a clan_options_t structure and
  * fill its fields with the defaults values. It returns a pointer to the
  * allocated clan_options_t structure.
+ * @return The pointer to the newly allocated atiling_options_t
  */
 atiling_options_p atiling_options_malloc(void) {
 	atiling_options_p options;
@@ -25,7 +26,7 @@ atiling_options_p atiling_options_malloc(void) {
 }
 
 /**
- * atiling_options_free function:
+ * @brief Free memory of atiling_options_t
  * This function frees the allocated memory for a atiling_options_t structure.
  * @param options Option structure to be freed.
  */
@@ -38,7 +39,6 @@ void atiling_options_free(atiling_options_p options) {
  *                            Processing functions                            *
  ******************************************************************************/
 /**
- * atiling_options_help function:
  * This function displays the quick help when the user set the option -help
  * while calling clan. Prints are cut to respect the 509 characters
  * limitation of the ISO C 89 compilers.
@@ -57,6 +57,12 @@ void atiling_options_help() {
 		"to read data on standard input.\n\n");
 }
 
+/**
+ * @brief Convert str output value to FILE *
+ * The value "stdout" is a special value that will point to stdout
+ * @param[in] 		value
+ * @param[in, out]	output
+ */
 void atiling_options_set_output(char *value, FILE **output) {
 	if (*output != stdout) {
 		fclose(*output);
@@ -73,7 +79,6 @@ void atiling_options_set_output(char *value, FILE **output) {
 }
 
 /**
- * atiling_options_read function:
  * This functions reads all the options and the input/output files thanks
  * the the user's calling line elements (in argc). It fills a atiling_options_t
  * structure.
@@ -107,39 +112,51 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 
 		switch (c) {
 		case 0:
+			// Print version
 			if (!strcmp(long_options[option_index].name, "version")) {
 				fprintf(stderr, "version %s\n", ATILING_VERSION);
 				infos = ATILING_TRUE;
-			} else if (!strcmp(long_options[option_index].name, "help")) {
+			}
+			// Print usage
+			else if (!strcmp(long_options[option_index].name, "help")) {
 				atiling_options_help();
 				infos = ATILING_TRUE;
-			} else if (!strcmp(long_options[option_index].name, "verbose")) {
-
-			} else if (!strcmp(long_options[option_index].name, "output")) {
+			}
+			// Print debug info
+			else if (!strcmp(long_options[option_index].name, "verbose")) {
+				// TODO
+			}
+			// Set output file
+			else if (!strcmp(long_options[option_index].name, "output")) {
 				atiling_options_set_output(optarg, output);
 			}
 			break;
 		case 'h':
+			// Print usage
 			atiling_options_help();
 			infos = ATILING_TRUE;
 			break;
 		case 'v':
+			// Print version
 			fprintf(stderr, "version %s\n", ATILING_VERSION);
 			infos = ATILING_TRUE;
 			break;
-
 		case 'o':
+			// Set output file
 			atiling_options_set_output(optarg, output);
 			break;
 		}
 	}
 
+	// One arg (input file) is required if we do not print info on program (like
+	// --version or --help)
 	if (infos == ATILING_FALSE) {
 		if (optind > argc - 1) {
 			ATILING_error("usage: not enough arg (-h for help)");
 		} else if (optind < argc - 1) {
 			ATILING_error("usage: too many args (-h for help)");
 		} else {
+			// '-' as input arg is special char that will read input in stdin
 			if (!strcmp(argv[optind], "-")) {
 				printf("j%s\n", argv[optind]);
 				*input = stdin;
@@ -151,7 +168,7 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 					ATILING_error("cannot open input file");
 
 				ATILING_strdup(options->name, argv[optind]);
-						}
+			}
 		}
 	}
 
