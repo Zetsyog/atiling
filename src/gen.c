@@ -4,15 +4,19 @@
 #include <stdio.h>
 #include <string.h>
 
-void atiling_gen_fragment(FILE *, atiling_fragment_p);
-void atiling_gen_trahrhe(atiling_fragment_p);
-void atiling_gen_iloop(FILE *, atiling_fragment_p, int, osl_strings_p, int);
-void gen_macros(FILE *);
+static void atiling_gen_fragment(FILE *, atiling_fragment_p);
+static void atiling_gen_trahrhe(atiling_fragment_p);
+static void atiling_gen_iloop(FILE *, atiling_fragment_p, int, osl_strings_p,
+							  int);
+static void gen_macros(FILE *);
 
 /**
- * @param input
- * @param output
- * @param fragment_list
+ * @brief Generate new code with algebraic tiling and write it in output
+ * This function will copy the code of input file in output, except the parts
+ * surrounded by the pragmas that will be replaced by the tiled loops
+ * @param input			The input file
+ * @param output		The output file
+ * @param fragment_list	The list of fragments
  */
 void atiling_gen(FILE *input, FILE *output, atiling_fragment_p *fragment_list) {
 	int fragment_index = 0;
@@ -58,6 +62,11 @@ void atiling_gen(FILE *input, FILE *output, atiling_fragment_p *fragment_list) {
 	}
 }
 
+/**
+ * @brief Generates the new code for a given fragment
+ * @param output	The output file
+ * @param fragment 	The fragment
+ */
 void atiling_gen_fragment(FILE *output, atiling_fragment_p fragment) {
 	if (fragment->loop_count == 0) {
 		return;
@@ -77,14 +86,19 @@ void atiling_gen_fragment(FILE *output, atiling_fragment_p fragment) {
 	osl_strings_free(params);
 }
 
+/**
+ * @brief Write tabs to indent file to the given level
+ * @param file 	The output file
+ * @param level	The indent level
+ */
 void atiling_gen_indent(FILE *file, int level) {
 	for (int i = 0; i < level; i++) {
 		fprintf(file, "\t");
 	}
 }
 
-void atiling_gen_ixpcmax(FILE *output, char *it_name, char **params,
-						 int level) {
+static void atiling_gen_ixpcmax(FILE *output, char *it_name, char **params,
+								int level) {
 	atiling_gen_indent(output, level);
 	fprintf(output, "%s%s = %s%s(", it_name, ATILING_GEN_STR_PCMAX, it_name,
 			ATILING_GEN_STR_EHRHART);
@@ -99,20 +113,22 @@ void atiling_gen_ixpcmax(FILE *output, char *it_name, char **params,
 	fprintf(output, ");\n");
 }
 
-void atiling_gen_ivol_level(FILE *output, int level, char *it_name, char *div,
-							int ilevel) {
+static void atiling_gen_ivol_level(FILE *output, int level, char *it_name,
+								   char *div, int ilevel) {
 	atiling_gen_indent(output, ilevel);
 	fprintf(output, "%s%i = %s%s / %s;\n", ATILING_GEN_STR_TILEVOL, level,
 			it_name, ATILING_GEN_STR_PCMAX, div);
 }
 
-void atiling_gen_iubxt(FILE *output, char *x, int vol_level, int ilevel) {
+static void atiling_gen_iubxt(FILE *output, char *x, int vol_level,
+							  int ilevel) {
 	atiling_gen_indent(output, ilevel);
 	fprintf(output, "ub%st = max(%s%s / (%s%i) - 1, 0);\n", x, x,
 			ATILING_GEN_STR_PCMAX, ATILING_GEN_STR_TILEVOL, vol_level);
 }
 
-void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag, int level) {
+static void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag,
+									int level) {
 	atiling_gen_indent(output, level);
 	fprintf(output, "#pragma omp parallel for ");
 	fprintf(output, "firstprivate(%s%s, %s%i) \\\n", frag->loops[0]->name,
@@ -136,18 +152,18 @@ void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag, int level) {
 	fprintf(output, ")\n");
 }
 
-void atiling_gen_ifor_begin(FILE *output, char *x, int level) {
+static void atiling_gen_ifor_begin(FILE *output, char *x, int level) {
 	atiling_gen_indent(output, level);
 	fprintf(output, "for(%st = 0; %st <= ub%st; %st++) {\n", x, x, x, x);
 }
 
-void atiling_gen_ifor_end(FILE *output, int level) {
+static void atiling_gen_ifor_end(FILE *output, int level) {
 	atiling_gen_indent(output, level);
 	fprintf(output, "}\n");
 }
 
-void atiling_gen_ilbx(FILE *output, char *x, char **params, int level,
-					  int ilevel) {
+static void atiling_gen_ilbx(FILE *output, char *x, char **params, int level,
+							 int ilevel) {
 	atiling_gen_indent(output, ilevel);
 	fprintf(output, "lb%s = %s%s%s(max(%st * (%s%i + 1), 1), ", x, x,
 			ATILING_GEN_STR_TRAHRHE, x, x, ATILING_GEN_STR_TILEVOL, level);
@@ -161,8 +177,8 @@ void atiling_gen_ilbx(FILE *output, char *x, char **params, int level,
 	fprintf(output, ");\n");
 }
 
-void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
-					  int ilevel) {
+static void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
+							 int ilevel) {
 	atiling_gen_indent(output, ilevel);
 
 	// trahrhe i(min(( it+1)∗(TILE VOL L1+1),i pcmax),N, M) − 1;
@@ -179,8 +195,11 @@ void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 	fprintf(output, ");\n");
 }
 
-void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
-							 int ilevel) {
+/**
+ * Generates the inner loop
+ */
+static void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
+									int ilevel) {
 	for (int i = 0; i < fragment->loop_count; i++) {
 		char *x = fragment->loops[i]->name;
 
@@ -233,8 +252,8 @@ void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
 	}
 }
 
-void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
-							   int ilevel) {
+static void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
+									  int ilevel) {
 	atiling_gen_indent(output, ilevel);
 	// Last slice adjustment
 	fprintf(output, "if(%st == ub%st) ub%s = ", x, x, x);
@@ -242,8 +261,8 @@ void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
 	fprintf(output, ";\n");
 }
 
-void atiling_gen_ivardecl(FILE *output, loop_info_p info, int depth,
-						  int ilevel) {
+static void atiling_gen_ivardecl(FILE *output, loop_info_p info, int depth,
+								 int ilevel) {
 	atiling_gen_indent(output, ilevel);
 
 	// iterator
@@ -265,8 +284,18 @@ void atiling_gen_ivardecl(FILE *output, loop_info_p info, int depth,
 	fprintf(output, "ub%st = 0; \n", info->name);
 }
 
-void atiling_gen_iloop(FILE *output, atiling_fragment_p fragment,
-					   int loop_index, osl_strings_p params, int ilevel) {
+/**
+ * Generate the code for the loop of depth loop_index with base indentation
+ * level ilevel This is a recursive function on loop_index
+ * @param output		The output file
+ * @param fragment		The current fragment
+ * @param loop_index	The loop index (loop depth: 0 -> external loop,...)
+ * @param params		The parameters. Used for trahrhe computation functions
+ * @param ilevel		The indent level
+ */
+static void atiling_gen_iloop(FILE *output, atiling_fragment_p fragment,
+							  int loop_index, osl_strings_p params,
+							  int ilevel) {
 	// stop condition
 	if (loop_index >= fragment->loop_count)
 		return;
@@ -381,6 +410,10 @@ void atiling_gen_trahrhe(atiling_fragment_p fragment) {
 	printf("%s\n", cmd);
 }
 
+/**
+ * Generate macros used in generated code
+ * @param output The output file
+ */
 void gen_macros(FILE *output) {
 	fprintf(output, "#include \"%s\"\n", ATILING_GEN_INCLUDE);
 	fprintf(output, "%s\n", ATILING_GEN_MIN);

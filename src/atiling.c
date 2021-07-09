@@ -4,6 +4,16 @@
 
 atiling_fragment_p *atiling_parse(FILE *input, atiling_options_p options);
 
+/**
+ * @brief extract fragments of code from file
+ * This function analyses code between pragmas 'trahrhre atiling' and store all
+ * its useful data in a structure atiling_fragment_p
+ * Then it returns an array all of extracted code
+ * The returned array and the pointers it contains must be free'd.
+ * @param[in] input 	The input file. Must be opened
+ * @param[in] options	The global options
+ * @return An array of code fragments
+ */
 atiling_fragment_p *atiling_extract(FILE *input, atiling_options_p options) {
 	atiling_fragment_p *frags = atiling_parse(input, options);
 

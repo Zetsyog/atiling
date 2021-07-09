@@ -11,14 +11,17 @@ int main(int argc, char **argv) {
 	options = atiling_options_read(argc, argv, &input, &output);
 
 	if (options->name != NULL) {
+		// extract code fragments
 		atiling_fragment_p *fragment = atiling_extract(input, options);
 
 		for (int i = 0; fragment[i] != NULL; i++) {
 			atiling_fragment_idump(stdout, fragment[i], 0);
 		}
 
+		// write new code in output file
 		atiling_gen(input, output, fragment);
 
+		// save the planet
 		for (int i = 0; fragment[i] != NULL; i++) {
 			atiling_fragment_free(fragment[i]);
 		};
@@ -26,23 +29,7 @@ int main(int argc, char **argv) {
 		fclose(input);
 	}
 
-	// osl_scop_p scop;
-	// // Read the OpenScop file.
-	// scop = osl_scop_read(input);
-
-	// printf("%li\n", atiling_count_nested_loop(scop));
-
-	// loop_info_p info = atiling_loop_info_get(scop, 2);
-
-	// atiling_loop_info_dump(info);
-
-	// atiling_loop_info_free(info);
-
-	// Dump the content of the scop data structure.
-	// osl_scop_dump(stdout, scop);
-	// Save the planet.
-
-	// osl_scop_free(scop);
+	// still saving the planet
 	atiling_options_free(options);
 
 	return 0;
