@@ -59,83 +59,13 @@ dnl # Checks for library functions.
 AC_CHECK_FUNCS([memset strdup])
 
 dnl ############################################################################
-dnl #                          OpenScop Library                                #
+dnl #                                Pluto                                     #
 dnl ############################################################################
-AC_SUBST(OSL_CFLAGS)
-AC_SUBST(OSL_LIBS)
-AC_SUBST(OSL_LDFLAGS)
-
-dnl # Check if a custom path for osl is provided 
-dnl # (else default path is /usr/local/osl)
-AC_ARG_WITH([osl_prefix],
-  [AS_HELP_STRING([--with-osl-prefix],
-     [Prefix of osl installation (default is /usr/local/lib/osl)])],
-  [osl_prefix=$withval],
-  [osl_prefix=/usr/local/])
-
-OSL_CFLAGS="-I$osl_prefix/include"
-OSL_LDFLAGS="-L$osl_prefix/lib"
-OSL_LIBS="-losl"
-
-dnl # Check the headers (without polluting CPPFLAGS)
-save_CPPFLAGS=$CFLAGS
-CPPFLAGS="$CPPFLAGS $OSL_CFLAGS"
-AC_CHECK_HEADER(osl/osl.h, [], [AC_MSG_ERROR("Can't find osl headers.")])
-CPPFLAGS=$save_CPPFLAGS
-
-dnl # Check the library (without polluting LDFLAGS)
-save_LDFLAGS=$LDFLAGS
-LDFLAGS="$LDFLAGS $OSL_LDFLAGS"
-AC_CHECK_LIB(osl, osl_scop_malloc, [], [AC_MSG_ERROR("Can't find osl library.")])
-LDFLAGS=$save_LDFLAGS
-
-dnl ############################################################################
-dnl #                            Clan Library                                  #
-dnl ############################################################################
-AC_SUBST(CLAN_CFLAGS)
-AC_SUBST(CLAN_LIBS)
-AC_SUBST(CLAN_LDFLAGS)
-
-dnl # Check if a custom path for osl is provided 
-dnl # (else default path is /usr/local/osl)
-AC_ARG_WITH([clan_prefix],
-  [AS_HELP_STRING([--with-clan-prefix],
-     [Prefix of clan installation (default is /usr/local/)])],
-  [clan_prefix=$withval],
-  [clan_prefix=/usr/local/])
-
-CLAN_CFLAGS="-I$clan_prefix/include"
-CLAN_LDFLAGS="-L$clan_prefix/lib"
-CLAN_LIBS="-lclan"
-
-dnl # Check the headers (without polluting CPPFLAGS)
-save_CPPFLAGS=$CFLAGS
-CPPFLAGS="$CPPFLAGS $CLAN_CFLAGS"
-AC_CHECK_HEADER(clan/clan.h, [], [AC_MSG_ERROR("Can't find clan headers.")])
-CPPFLAGS=$save_CPPFLAGS
-
-dnl # Check the library (without polluting LDFLAGS)
-save_LDFLAGS=$LDFLAGS
-LDFLAGS="$LDFLAGS $CLAN_LDFLAGS"
-AC_CHECK_LIB(clan, clan_symbol_malloc, [], [AC_MSG_ERROR("Can't find clan library.")])
-LDFLAGS=$save_LDFLAGS
-
-dnl ############################################################################
-dnl #                            Pluto Library                                 #
-dnl ############################################################################
-AC_SUBST(PLUTO_CFLAGS)
-AC_SUBST(PLUTO_LIBS)
-AC_SUBST(PLUTO_LDFLAGS)
-
-AC_ARG_WITH([pluto_prefix],
-  [AS_HELP_STRING([--with-pluto-prefix],
-     [Prefix of pluto installation (default is /usr/local/)])],
-  [pluto_prefix=$withval],
-  [pluto_prefix=/usr/local/])
-
-PLUTO_CFLAGS="-I$pluto_prefix/include"
-PLUTO_LDFLAGS="-L$pluto_prefix/lib"
-PLUTO_LIBS="-lclan"
+echo ""
+echo "==========================="
+echo "Configuring Pluto"
+echo "==========================="
+AC_CONFIG_SUBDIRS([pluto])
 
 
 dnl ############################################################################
@@ -156,3 +86,10 @@ AC_CONFIG_FILES([\
 
 AC_OUTPUT
 
+echo " /*-----------------------------------------------*"
+echo "  *          ATILING configuration is OK          *"
+echo "  *-----------------------------------------------*/"
+echo "Your system is ready to compile ATILING"
+echo "Run 'make' next to compile"
+# echo "Then, run 'make test' to check if everything is working correctly"
+echo "Use atiling (see README)"

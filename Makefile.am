@@ -1,5 +1,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
+SUBDIRS = pluto
+
 bin_PROGRAMS = atiling
 
 ATILING_INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
