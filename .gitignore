@@ -6,7 +6,8 @@ output.c
 tmp.scop
 
 # Generated executable
-/atiling
+/src/atiling
+atiling
 
 # Generated source files
 src/parser.c
@@ -15,14 +16,19 @@ src/scanner.c
 include/atiling/macros.h
 include/atiling/yacc.h
 
+trahrhe/
+atiling.sh
+
 # Log files
 *.log
 
 # Tmp files
 *.tmp
 
-# autoconf
+# autoconf & autotools & cie
 /autoconf
+.libs/
+libtool
 
 # C gitignore template (https://github.com/github/gitignore/blob/master/C.gitignore)
 # Prerequisites

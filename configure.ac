@@ -16,6 +16,8 @@ dnl --- Put as most as possible configuration files to an auxiliary dir
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CONFIG_MACRO_DIR([m4])
 
+LT_INIT()
+
 dnl ############################################################################
 dnl #                          Init automake                                   #
 dnl ############################################################################
@@ -65,7 +67,7 @@ echo ""
 echo "==========================="
 echo "Configuring Pluto"
 echo "==========================="
-AC_CONFIG_SUBDIRS([pluto])
+dnl AC_CONFIG_SUBDIRS([pluto])
 
 
 dnl ############################################################################
@@ -77,14 +79,20 @@ AC_SUBST(VERSION_MINOR)
 AC_SUBST(VERSION_REVISION)
 AC_SUBST([YACC_PREFIX], [at_])
 
+AC_PATH_PROGS(BASH, bash)
+
 dnl # Config Makefile
 AC_CONFIG_FILES([\
-  Makefile \
   include/atiling/macros.h \
   include/atiling/yacc.h
 ])
 
-AC_OUTPUT
+AC_OUTPUT([
+  Makefile \
+  src/Makefile \
+  test/Makefile \
+  atiling.sh
+])
 
 echo " /*-----------------------------------------------*"
 echo "  *          ATILING configuration is OK          *"

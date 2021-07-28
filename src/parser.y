@@ -12,7 +12,7 @@
     extern int   scanner_pragma_header;    /**< Are we parsing pragma header? */
     extern int   scanner_line;
     extern int   scanner_column;
-    extern atiling_fragment_p *scanner_fragments;
+    extern atiling_fragment_p scanner_fragment;
 
     int  yylex(void);
     void yyerror(char*);
@@ -143,7 +143,7 @@ void yyerror(char *s) {
     }
 }
 
-atiling_fragment_p *atiling_parse(FILE *input, atiling_options_p options) {
+atiling_fragment_p atiling_parse(FILE *input, atiling_options_p options) {
     yyin = input;
     input_name = options->name;
 
@@ -153,5 +153,5 @@ atiling_fragment_p *atiling_parse(FILE *input, atiling_options_p options) {
 
     ATILING_debug("parsing done");
 
-    return scanner_fragments;
+    return scanner_fragment;
 }
