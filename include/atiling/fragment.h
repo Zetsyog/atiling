@@ -12,6 +12,7 @@ struct atiling_fragment {
 	char **divs;		/**< array of divisors ending by NULL */
 	int loop_count;		/**< number of nested loop */
 	loop_info_p *loops; /**< informations of each nested loop */
+	int id;
 };
 
 typedef struct atiling_fragment atiling_fragment_t;

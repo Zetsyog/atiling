@@ -1,32 +1,27 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-bin_PROGRAMS = atiling
+SUBDIRS = pluto src
 
-ATILING_INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include
+ACLOCAL_AMFLAGS = -I m4
 
-################################################################################
+bin_SCRIPTS = atiling
 
-AM_CFLAGS = $(CFLAGS_WARN)
-AM_CPPFLAGS = $(ATILING_INCLUDES) @OSL_CFLAGS@ @CLAN_CFLAGS@
-AM_YFLAGS = -y -d
+CLEANFILES: $(bin_SCRIPTS)
 
-BUILT_SOURCES = src/parser.h
-
+EXTRA_DIST = atiling.sh.in
 
 ################################################################################
+# Trahrhe
+trahrhe:
+	$(MAKE) -C trahrhe
 
-atiling_CPPFLAGS = $(ATILING_INCLUDES) @OSL_CFLAGS@ @CLAN_CFLAGS@
-atiling_SOURCES = \
-        src/parser.y \
-        src/main.c \
-        src/loop_info.c \
-        src/scanner.l \
-        src/atiling.c \
-        src/options.c \
-        src/fragment.c \
-        src/gen.c
+test: 
+	$(MAKE) -C test
 
-atiling_LDADD = $(LIBOBJS)
+atiling: atiling.sh
+	rm -f atiling
+	echo "#!"$(BASH) > atiling
+	cat atiling.sh >> atiling
+	chmod ugo+x atiling
 
-
-
+.PHONY: trahrhe test

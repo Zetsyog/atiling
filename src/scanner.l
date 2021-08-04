@@ -10,7 +10,7 @@ IS          ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 
     #include "atiling/macros.h"
     #include "atiling/fragment.h"
-    #include "src/parser.h"
+    #include "parser.h"
 
     void atiling_scanner_count();
     int  atiling_scanner(int, char*);
@@ -27,8 +27,7 @@ IS          ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 
     int scanner_pragma_begin_col;        /**< Number of pragma */
     FILE *scanner_out;            /**< Tmp file where code is writter */
-    int scanner_fragments_len;
-    atiling_fragment_p *scanner_fragments;
+    atiling_fragment_p scanner_fragment;
 
 %}
 
@@ -38,17 +37,20 @@ IS          ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 
 %%
 "#pragma"[ ]+"trahrhe"[ ]"atiling"  {
-                        if (ATILING_DEBUG)
-                            ATILING_debug("pragma atiling header start");
-
+                        if(scanner_fragment != NULL) {
+                            scanner_fragment->id++;
+                            return IGNORE; 
+                        }
+                        ATILING_debug("pragma atiling header start");
                         scanner_pragma_begin_col = scanner_column; 
                         atiling_scanner_count();
                         scanner_pragma_header = ATILING_TRUE;
                         return PRAGMA_BEGIN;
                     }
 "#pragma"[ ]+"endtrahrhe" {
-                        if (ATILING_DEBUG)
-                            ATILING_debug("pragma endatiling");
+                        if(scanner_pragma == ATILING_FALSE)
+                            return IGNORE;
+                        ATILING_debug("pragma endatiling");
                         atiling_scanner_pragma_end();
                         atiling_scanner_count();
                         return PRAGMA_END;
@@ -80,11 +82,7 @@ void atiling_scanner_init() {
     scanner_column_LALR = 1;
     scanner_pragma_begin_col = 1;
 
-    scanner_fragments_len = 0;
-    scanner_fragments = NULL;
-    ATILING_malloc(scanner_fragments, atiling_fragment_p *, 
-            sizeof(atiling_fragment_p));
-    scanner_fragments[0] = NULL;
+    scanner_fragment = NULL;
 }
 
 /**
@@ -97,7 +95,7 @@ void atiling_scanner_init() {
 void atiling_scanner_free() {
     yy_delete_buffer(YY_CURRENT_BUFFER);
     free(yy_buffer_stack);
-    free(scanner_fragments);
+    free(scanner_fragment);
 }
 
 /**
@@ -124,13 +122,16 @@ void atiling_scanner_count() {
 }
 
 void atiling_scanner_pragma_begin(char **divs) {
+    if(scanner_fragment != NULL) {
+        return;
+    }
     ATILING_debug("begin pragma");
     char name[ATILING_MAX_FILENAME_LEN] = {0};
 
-    // output file name as loopi.tmp
+    // output file name as loop.tmp
     // this file is expected to be parsed by clan
-    if(snprintf(name, ATILING_MAX_FILENAME_LEN, "%s%i%s", 
-                ATILING_PRAGMA_FILE_NAME, scanner_fragments_len, 
+    if(snprintf(name, ATILING_MAX_FILENAME_LEN, "%s%s", 
+                ATILING_PRAGMA_FILE_NAME, 
                 ATILING_PRAGMA_FILE_EXT) < 0) {
         ATILING_error("snprintf");
     }
@@ -139,19 +140,14 @@ void atiling_scanner_pragma_begin(char **divs) {
     if(scanner_out == NULL) {
         ATILING_error("cannot open tmp output file");
     }
-
-    scanner_fragments_len++;
-    ATILING_realloc(scanner_fragments, atiling_fragment_p *, 
-                sizeof(atiling_fragment_p) * (scanner_fragments_len + 1));
     
-    scanner_fragments[scanner_fragments_len - 1] = atiling_fragment_malloc();
-    scanner_fragments[scanner_fragments_len - 1]->divs = divs;
+    scanner_fragment = atiling_fragment_malloc();
+    scanner_fragment->divs = divs;
 
-    ATILING_strdup(scanner_fragments[scanner_fragments_len - 1]->path, name);
-    scanner_fragments[scanner_fragments_len - 1]->start[0] = scanner_line;
-    scanner_fragments[scanner_fragments_len - 1]->start[1] 
+    ATILING_strdup(scanner_fragment->path, name);
+    scanner_fragment->start[0] = scanner_line;
+    scanner_fragment->start[1] 
                 = scanner_pragma_begin_col;
-    scanner_fragments[scanner_fragments_len] = NULL;
 
     fprintf(scanner_out, "#pragma scop\n");
 
@@ -163,9 +159,9 @@ void atiling_scanner_pragma_end() {
     fprintf(scanner_out, "\n#pragma endscop\n");
     fclose(scanner_out);
 
-    scanner_fragments[scanner_fragments_len - 1]->end[0] = scanner_line;
-    scanner_fragments[scanner_fragments_len - 1]->end[1] = scanner_column;
-    scanner_fragments[scanner_fragments_len - 1]->end[1] += strlen(yytext);
+    scanner_fragment->end[0] = scanner_line;
+    scanner_fragment->end[1] = scanner_column;
+    scanner_fragment->end[1] += strlen(yytext);
 
 
     ATILING_debug("end pragma");

@@ -10,21 +10,40 @@ int main(int argc, char **argv) {
 
 	options = atiling_options_read(argc, argv, &input, &output);
 
-	if (options->name != NULL) {
-		// extract code fragments
-		atiling_fragment_p *fragment = atiling_extract(input, options);
+	ATILING_debug("Writing temp info files");
 
-		for (int i = 0; fragment[i] != NULL; i++) {
-			atiling_fragment_idump(stdout, fragment[i], 0);
-		}
+	// write .srcfilename info file
+	FILE *fileinfo = fopen(".srcfilename", "w");
+	if (fileinfo == NULL) {
+		exit(1);
+	}
+	fprintf(fileinfo, "%s", options->name);
+	fclose(fileinfo);
+
+	// write .outfilename info file
+	fileinfo = fopen(".outfilename", "w");
+	if (fileinfo == NULL) {
+		exit(1);
+	}
+	fprintf(fileinfo, "%s", options->output);
+	fclose(fileinfo);
+
+	if (options->name != NULL) {
+
+		// extract code fragments
+		ATILING_debug("Extracting fragments");
+		atiling_fragment_p fragment = atiling_extract(input, options);
+
+		// atiling_apply_transform(fragment);
+
+		atiling_fragment_idump(stdout, fragment, 0);
 
 		// write new code in output file
-		atiling_gen(input, output, fragment);
+		ATILING_debug("Generating new code");
+		atiling_gen(input, output, fragment, options);
 
 		// save the planet
-		for (int i = 0; fragment[i] != NULL; i++) {
-			atiling_fragment_free(fragment[i]);
-		};
+		atiling_fragment_free(fragment);
 
 		fclose(input);
 	}

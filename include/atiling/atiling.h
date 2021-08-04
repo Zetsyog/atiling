@@ -6,7 +6,8 @@
 #include "atiling/loop_info.h"
 #include "atiling/macros.h"
 #include "atiling/options.h"
+#include "atiling/transform.h"
 
-atiling_fragment_p *atiling_extract(FILE *, atiling_options_p);
+atiling_fragment_p atiling_extract(FILE *, atiling_options_p);
 
 #endif

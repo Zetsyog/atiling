@@ -21,6 +21,7 @@ atiling_options_p atiling_options_malloc(void) {
 
 	// We set the various fields with default values.
 	options->name			= NULL; // Name of the input file is not set.
+	options->output			= "stdout";
 	options->keep_tmp_files = ATILING_FALSE;
 	return options;
 }
@@ -63,7 +64,8 @@ void atiling_options_help() {
  * @param[in] 		value
  * @param[in, out]	output
  */
-void atiling_options_set_output(char *value, FILE **output) {
+void atiling_options_set_output(char *value, FILE **output,
+								atiling_options_p options) {
 	if (*output != stdout) {
 		fclose(*output);
 		ATILING_error("output must be unique");
@@ -76,6 +78,7 @@ void atiling_options_set_output(char *value, FILE **output) {
 		if (*output == NULL)
 			ATILING_error("cannot open the output file");
 	}
+	ATILING_strdup(options->output, value);
 }
 
 /**
@@ -128,7 +131,7 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 			}
 			// Set output file
 			else if (!strcmp(long_options[option_index].name, "output")) {
-				atiling_options_set_output(optarg, output);
+				atiling_options_set_output(optarg, output, options);
 			}
 			break;
 		case 'h':
@@ -143,7 +146,7 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 			break;
 		case 'o':
 			// Set output file
-			atiling_options_set_output(optarg, output);
+			atiling_options_set_output(optarg, output, options);
 			break;
 		}
 	}
