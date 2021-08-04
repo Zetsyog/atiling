@@ -67,7 +67,7 @@ echo ""
 echo "==========================="
 echo "Configuring Pluto"
 echo "==========================="
-dnl AC_CONFIG_SUBDIRS([pluto])
+AC_CONFIG_SUBDIRS([pluto])
 
 
 dnl ############################################################################
