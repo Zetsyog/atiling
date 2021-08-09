@@ -1,5 +1,13 @@
 #include "atiling/atiling.h"
-#include <clan/clan.h>
+#include "cloog/cloog.h"
+#include "math_support.h"
+#include "osl_pluto.h"
+#include "pluto.h"
+#include "pluto/pluto.h"
+#include "post_transform.h"
+#include "program.h"
+#include "transforms.h"
+#include "version.h"
 #include <libgen.h>
 #include <osl/osl.h>
 #include <stdio.h>
@@ -202,61 +210,183 @@ static void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 	fprintf(output, ");\n");
 }
 
+static void atiling_gen_cloog_code(FILE *output, osl_scop_p scop, int level) {
+	CloogInput *input;
+	CloogOptions *cloogOptions;
+	CloogState *state;
+	state		 = cloog_state_malloc();
+	cloogOptions = cloog_options_malloc(state);
+	struct clast_stmt *root;
+	int nstmts		  = 1;
+	cloogOptions->sh  = 1;
+	cloogOptions->otl = 1;
+
+	cloogOptions->quiet = 1;
+
+	input = cloog_input_from_osl_scop(state, scop);
+	cloog_options_copy_from_osl_scop(scop, cloogOptions);
+
+	root = cloog_clast_create_from_input(input, cloogOptions);
+
+	clast_pprint(output, root, 0, cloogOptions);
+
+	cloog_clast_free(root);
+
+	cloog_options_free(cloogOptions);
+	cloog_state_free(state);
+}
+
+static void atiling_gen_domain_union(osl_statement_p stmt, osl_relation_p base,
+									 int orig_params, int max_it, int it) {
+	if (it == max_it) {
+		osl_relation_add(&stmt->domain, base);
+		return;
+	}
+	int precision = base->precision;
+
+	osl_relation_p base1 = osl_relation_clone(base);
+	osl_relation_p base2 = osl_relation_clone(base);
+
+	osl_vector_p vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// i - lbi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1);		 // >= 0
+	osl_int_set_si(precision, &(vec->v[1 + it]), 1); // i
+	osl_int_set_si(precision,
+				   &(vec->v[1 + base->nb_output_dims + orig_params + it * 2]),
+				   -1); // -lbi
+
+	osl_relation_insert_vector(base1, vec, -1);
+	osl_relation_insert_vector(base2, vec, -1);
+	osl_vector_free(vec);
+
+	vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// -i + ubi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1);		  // >= 0
+	osl_int_set_si(precision, &(vec->v[1 + it]), -1); // -i
+	osl_int_set_si(
+		precision,
+		&(vec->v[1 + base->nb_output_dims + orig_params + it * 2 + 1]),
+		1); // ubi
+
+	osl_relation_insert_vector(base1, vec, -1);
+	osl_relation_insert_vector(base2, vec, -1);
+	osl_vector_free(vec);
+
+	vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// ubi >= 0 && ubi -lbi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1); // >= 0
+	osl_int_set_si(
+		precision,
+		&(vec->v[1 + base->nb_output_dims + orig_params + it * 2 + 1]),
+		1); // ubi
+
+	osl_relation_insert_vector(base1, vec, -1);
+
+	osl_int_set_si(precision,
+				   &(vec->v[1 + base->nb_output_dims + orig_params + it * 2]),
+				   -1); // -lbi
+	osl_relation_insert_vector(base2, vec, -1);
+
+	osl_vector_free(vec);
+
+	// Append -lbi to upper bound
+	osl_int_set_si(precision,
+				   &(base2->m[it * 3 + 2]
+							 [1 + base->nb_output_dims + orig_params + it * 2]),
+				   -1); // -lbi
+
+	osl_relation_free_inside(base);
+
+	atiling_gen_domain_union(stmt, base1, orig_params, max_it, it + 1);
+	atiling_gen_domain_union(stmt, base2, orig_params, max_it, it + 1);
+}
+
+static void atiling_gen_update_domain(atiling_fragment_p frag,
+									  osl_statement_p stmt, int orig_params) {
+	int precision = stmt->domain->precision;
+	int num_it	  = 0;
+	osl_body_p body =
+		(osl_body_p)osl_generic_lookup(stmt->extension, OSL_URI_BODY);
+	if (body) {
+		num_it = osl_strings_size(body->iterators);
+	}
+
+	osl_relation_p base = osl_relation_clone(stmt->domain);
+
+	atiling_gen_domain_union(stmt, base, orig_params, num_it, 0);
+
+	osl_relation_remove_part(&stmt->domain, stmt->domain);
+}
+
 /**
- * Generates the inner loop
+ * Generates the inner loops
  */
-static void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
+static void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p frag,
 									int ilevel) {
-	for (int i = 0; i < fragment->loop_count; i++) {
-		char *x = fragment->loops[i]->name;
+	osl_scop_p scop	 = osl_scop_clone(frag->scop);
+	int orig_params	 = frag->scop->context->nb_parameters;
+	int added_params = frag->loop_count * 2;
+	int precision	 = scop->statement->domain->precision;
 
-		atiling_gen_indent(output, ilevel + 1 + i);
+	// Update context info
+	// We add two params (and row cols) for each iterator x : lbx and ubx
+	scop->context->nb_parameters += added_params;
+	scop->context->nb_columns += added_params;
 
-		if (fragment->divs[i][0] == '1' && fragment->divs[i][1] == 0) {
-			fprintf(output, "for(%s = ", x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->start_row, NULL);
-			fprintf(output, " ; %s <= ", x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->end_row, NULL);
-			fprintf(output, " ; %s++) {\n", x);
-		} else {
-			fprintf(output, "for(%s = max(", x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->start_row, NULL);
-			fprintf(output, ",lb%s); %s <= min(", x, x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->end_row, NULL);
-			fprintf(output, ", ub%s); %s++) {\n", x, x);
-		}
+	// Add param names
+	osl_strings_p params = scop->parameters->data;
+	for (int i = 0; i < frag->loop_count; i++) {
+		char *str = malloc(strlen(frag->loops[i]->name) + 2 + 1);
+		sprintf(str, "%s%s", "lb", frag->loops[i]->name);
+		osl_strings_add(params, str);
+		sprintf(str, "%s%s", "ub", frag->loops[i]->name);
+		osl_strings_add(params, str);
+		free(str);
+	}
 
-		osl_statement_p statement = fragment->scop->statement;
-		osl_body_p body =
-			osl_generic_lookup(fragment->scop->extension, OSL_URI_BODY);
+	// For each statement
+	osl_statement_p stmt = scop->statement;
+	while (stmt != NULL) {
+		// Insert new cols
+		for (int i = 0; i < added_params; i++) {
 
-		while (statement != NULL) {
-			osl_generic_p st_ext = statement->extension;
-			osl_body_p body		 = st_ext->data;
+			osl_relation_insert_blank_column(stmt->domain,
+											 stmt->domain->nb_columns - 1);
+			osl_relation_insert_blank_column(stmt->scattering,
+											 stmt->scattering->nb_columns - 1);
 
-			if (body != NULL) {
-				if (osl_strings_size(body->iterators) == i + 1) {
-					osl_body_p ext =
-						osl_generic_lookup(statement->extension, OSL_URI_BODY);
-
-					if (ext != NULL) {
-						atiling_gen_indent(output, ilevel + 2 + i);
-						osl_strings_print(output, ext->expression);
-					}
-				}
+			osl_relation_list_p list = stmt->access;
+			while (list != NULL) {
+				osl_relation_insert_blank_column(list->elt,
+												 list->elt->nb_columns - 1);
+				list = list->next;
 			}
-
-			statement = statement->next;
 		}
+		stmt->domain->nb_parameters += added_params;
+		stmt->scattering->nb_parameters += added_params;
+
+		osl_relation_list_p list = stmt->access;
+		while (list != NULL) {
+			list->elt->nb_parameters += added_params;
+			list = list->next;
+		}
+
+		// Update domain
+		atiling_gen_update_domain(frag, stmt, orig_params);
+
+		stmt = stmt->next;
 	}
-	for (int i = fragment->loop_count - 1; i >= 0; i--) {
-		atiling_gen_indent(output, ilevel + 1 + i);
-		fprintf(output, "}\n");
-	}
+
+	FILE *tmp = fopen("inner.scop", "w");
+	osl_scop_print(tmp, scop);
+	fclose(tmp);
+
+	atiling_gen_cloog_code(output, scop, ilevel);
+
+	// osl_scop_free(scop);
 }
 
 static void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
@@ -444,6 +574,8 @@ void atiling_gen_header(atiling_fragment_p fragment,
 	fprintf(trahrhe_tmp, "%s\n", cmd);
 	fprintf(trahrhe_tmp, "%s%i%s\n", basename(options->output), fragment->id,
 			ATILING_GEN_INCLUDE);
+	fprintf(trahrhe_tmp, "%i\n", fragment->loop_count);
+
 	fclose(trahrhe_tmp);
 
 	ATILING_debug("Done.");

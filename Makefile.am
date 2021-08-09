@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-SUBDIRS = src pluto
+SUBDIRS = src
 
 ACLOCAL_AMFLAGS = -I m4
 

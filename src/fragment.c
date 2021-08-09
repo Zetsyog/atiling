@@ -13,6 +13,7 @@ atiling_fragment_p atiling_fragment_malloc() {
 	frag->loop_count = 0;
 	frag->loops		 = NULL;
 	frag->id		 = 0;
+	frag->options	 = NULL;
 	return frag;
 }
 

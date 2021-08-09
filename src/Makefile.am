@@ -28,6 +28,7 @@ atiling_CXXFLAGS = $(OPT_FLAGS) $(DEBUG_FLAGS) -O0 \
 	$(ATILING_INCLUDES) \
 	-I$(top_srcdir)/pluto/openscop/include \
 	-I$(top_srcdir)/pluto/clan/include \
+	-I$(top_srcdir)/pluto/cloog-isl/include \
 	-I$(top_srcdir)/pluto/isl/include -I$(top_builddir)/pluto/isl/include \
 	-I$(top_srcdir)/pluto/include \
 	-I$(top_srcdir)/pluto/tool \
@@ -39,6 +40,7 @@ atiling_LDADD =  \
 	$(AC_LIBOBJ) \
 	../pluto/openscop/libosl.la \
 	../pluto/clan/libclan.la \
+	../pluto/cloog-isl/libcloog-isl.la \
 	../pluto/lib/libpluto.la \
 	../pluto/tool/libpluto_tool.la \
 	-lm -lgomp

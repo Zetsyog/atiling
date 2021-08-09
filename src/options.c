@@ -23,6 +23,7 @@ atiling_options_p atiling_options_malloc(void) {
 	options->name			= NULL; // Name of the input file is not set.
 	options->output			= "stdout";
 	options->keep_tmp_files = ATILING_FALSE;
+	options->pluto_opt		= ATILING_FALSE;
 	return options;
 }
 
@@ -100,11 +101,10 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 	int c;
 	int digit_optind = 0;
 
-	static struct option long_options[] = {{"version", no_argument, 0, 0},
-										   {"help", no_argument, 0, 0},
-										   {"output", required_argument, 0, 0},
-										   {"verbose", no_argument, 0, 0},
-										   {0, 0, 0, 0}};
+	static struct option long_options[] = {
+		{"version", no_argument, 0, 0},		 {"help", no_argument, 0, 0},
+		{"output", required_argument, 0, 0}, {"verbose", no_argument, 0, 0},
+		{"transform", no_argument, 0, 0},	 {0, 0, 0, 0}};
 
 	while (1) {
 		int this_option_optind = optind ? optind : 1;
@@ -128,6 +128,10 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 			// Print debug info
 			else if (!strcmp(long_options[option_index].name, "verbose")) {
 				// TODO
+			}
+			// Do pluto optimization
+			else if (!strcmp(long_options[option_index].name, "transform")) {
+				options->pluto_opt = ATILING_TRUE;
 			}
 			// Set output file
 			else if (!strcmp(long_options[option_index].name, "output")) {

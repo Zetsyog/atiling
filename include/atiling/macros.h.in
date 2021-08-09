@@ -18,7 +18,7 @@
 #define ATILING_GEN_VAR_TYPE	 "long int"
 #define ATILING_GEN_MIN			 "#define min(X, Y) (((X) < (Y)) ? (X) : (Y))"
 #define ATILING_GEN_MAX			 "#define max(X, Y) (((X) > (Y)) ? (X) : (Y))"
-#define ATILING_GEN_INCLUDE		 "trahrhe_tiling_header.h"
+#define ATILING_GEN_INCLUDE		 "_tiling_header.h"
 
 /*----------------------------------------------------------------------------+
  |                               UTILITY MACROS                               |
