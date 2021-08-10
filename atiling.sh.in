@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 atiling=@abs_top_builddir@/src/atiling
 trahrhe_dir=@abs_top_srcdir@/trahrhe/
 
@@ -51,7 +53,7 @@ run()
 cleanup() 
 {
     echo -e "Cleaning..."
-    rm -f $SRCFILENAME $OUTFILENAME $OPTFILENAME inner.scop tmp.scop$
+    rm -f $SRCFILENAME $OUTFILENAME $OPTFILENAME inner.scop tmp.scop
     echo -e "done."
 }
 
