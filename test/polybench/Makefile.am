@@ -1,18 +1,24 @@
 PLUTO = ../../pluto/polycc
 ATILING = ../../atiling
 
-CFLAGS = -DPOLYBENCH_TIME -O3 -I./utilities -g
+CFLAGS = -DPOLYBENCH_TIME -O3 -I./utilities -g -DATILING_DIV1=8 -DATILING_DIV2=16 -DATILING_DIV3=32
 LDFLAGS = -lm -fopenmp
 
 PLUTOFLAGS = --nounrolljam --tile --parallel --noprevector -q
+ATILINGFLAGS = 
+
+TEST_SRC = \
+	linear-algebra/kernels/2mm/2mm.c \
+	linear-algebra/kernels/3mm/3mm.c \
+	linear-algebra/blas/syr2k/syr2k.c
+
+
+################################################################################
 
 POLYBENCH_SRC = ./utilities/polybench.c
 POLYBENCH_OBJ = ./utilities/polybench.o
 
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
-
-TEST_SRC = \
-	linear-algebra/kernels/2mm/2mm.c
 
 TEST_OBJ = $(patsubst %.c, %.o, $(TEST_SRC)) \
 		$(patsubst %.c, %_pluto_gen.o, $(TEST_SRC)) \
@@ -54,4 +60,4 @@ $(POLYBENCH_OBJ): $(POLYBENCH_SRC)
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 clean-local:
-	-rm -rf $(TARGETS) */**.o
+	-rm -rf $(TARGETS) */**.o ./*.cloog *.tmp

@@ -75,7 +75,7 @@ static void kernel_2mm(int ni, int nj, int nk, int nl, DATA_TYPE alpha,
 	int i, j, k;
 	int i1, j1, k1;
 
-#pragma trahrhe atiling(8, 16, 32)
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	/* D := alpha*A*B*C + beta*D */
 	for (i = 0; i < _PB_NI; i++)
 		for (j = 0; j < _PB_NJ; j++) {
@@ -85,7 +85,7 @@ static void kernel_2mm(int ni, int nj, int nk, int nl, DATA_TYPE alpha,
 		}
 #pragma endtrahrhe
 
-#pragma trahrhe atiling(8, 16, 32)
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	for (i1 = 0; i1 < _PB_NI; i1++)
 		for (j1 = 0; j1 < _PB_NL; j1++) {
 			D[i1][j1] *= beta;

@@ -72,7 +72,7 @@ static void kernel_3mm(int ni, int nj, int nk, int nl, int nm,
 					   DATA_TYPE POLYBENCH_2D(G, NI, NL, ni, nl)) {
 	int i, j, k;
 
-#pragma scop
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	/* E := A*B */
 	for (i = 0; i < _PB_NI; i++)
 		for (j = 0; j < _PB_NJ; j++) {
@@ -80,21 +80,28 @@ static void kernel_3mm(int ni, int nj, int nk, int nl, int nm,
 			for (k = 0; k < _PB_NK; ++k)
 				E[i][j] += A[i][k] * B[k][j];
 		}
+#pragma endtrahrhe
+	int i1, j1, k1;
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	/* F := C*D */
-	for (i = 0; i < _PB_NJ; i++)
-		for (j = 0; j < _PB_NL; j++) {
-			F[i][j] = SCALAR_VAL(0.0);
-			for (k = 0; k < _PB_NM; ++k)
-				F[i][j] += C[i][k] * D[k][j];
+	for (i1 = 0; i1 < _PB_NJ; i1++)
+		for (j1 = 0; j1 < _PB_NL; j1++) {
+			F[i1][j1] = SCALAR_VAL(0.0);
+			for (k1 = 0; k1 < _PB_NM; ++k1)
+				F[i1][j1] += C[i1][k1] * D[k1][j1];
 		}
+#pragma endtrahrhe
+
+	int i2, j2, k2;
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	/* G := E*F */
-	for (i = 0; i < _PB_NI; i++)
-		for (j = 0; j < _PB_NL; j++) {
-			G[i][j] = SCALAR_VAL(0.0);
-			for (k = 0; k < _PB_NJ; ++k)
-				G[i][j] += E[i][k] * F[k][j];
+	for (i2 = 0; i2 < _PB_NI; i2++)
+		for (j2 = 0; j2 < _PB_NL; j2++) {
+			G[i2][j2] = SCALAR_VAL(0.0);
+			for (k2 = 0; k2 < _PB_NJ; ++k2)
+				G[i2][j2] += E[i2][k2] * F[k2][j2];
 		}
-#pragma endscop
+#pragma endtrahrhe
 }
 
 int main(int argc, char **argv) {
