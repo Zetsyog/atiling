@@ -1,5 +1,13 @@
 #include "atiling/atiling.h"
-#include <clan/clan.h>
+#include "cloog/cloog.h"
+#include "math_support.h"
+#include "osl_pluto.h"
+#include "pluto.h"
+#include "pluto/pluto.h"
+#include "post_transform.h"
+#include "program.h"
+#include "transforms.h"
+#include "version.h"
 #include <libgen.h>
 #include <osl/osl.h>
 #include <stdio.h>
@@ -137,8 +145,9 @@ static void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag,
 									int level) {
 	atiling_gen_indent(output, level);
 	fprintf(output, "#pragma omp parallel for ");
-	fprintf(output, "firstprivate(%s%s, %s%i_%i) \\\n", frag->loops[0]->name,
-			ATILING_GEN_STR_PCMAX, ATILING_GEN_STR_TILEVOL, 1, frag->id);
+	fprintf(output, "firstprivate(%s%s, %s%i_%i, ub%st) \\\n",
+			frag->loops[0]->name, ATILING_GEN_STR_PCMAX,
+			ATILING_GEN_STR_TILEVOL, 1, frag->id, frag->loops[0]->name);
 	atiling_gen_indent(output, level + 3);
 	fprintf(output, "private(");
 	for (int i = 0; i < frag->loop_count; i++) {
@@ -154,6 +163,7 @@ static void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag,
 					ATILING_GEN_STR_PCMAX);
 			fprintf(output, ", %s%i_%i", ATILING_GEN_STR_TILEVOL, i + 1,
 					frag->id);
+			fprintf(output, ", ub%st", frag->loops[i]->name);
 		}
 	}
 	fprintf(output, ")\n");
@@ -172,7 +182,7 @@ static void atiling_gen_ifor_end(FILE *output, int level) {
 static void atiling_gen_ilbx(FILE *output, char *x, char **params, int level,
 							 int id, int ilevel) {
 	atiling_gen_indent(output, ilevel);
-	fprintf(output, "lb%s = %s%s%s(max(%st * (%s%i_%i + 1), 1), ", x, x,
+	fprintf(output, "lb%s = %s%s%s(max(%st * (%s%i_%i), 1), ", x, x,
 			ATILING_GEN_STR_TRAHRHE, x, x, ATILING_GEN_STR_TILEVOL, level, id);
 
 	for (int i = 0; params[i] != NULL; i++) {
@@ -189,9 +199,9 @@ static void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 	atiling_gen_indent(output, ilevel);
 
 	// trahrhe i(min(( it+1)∗(TILE VOL L1+1),i pcmax),N, M) − 1;
-	fprintf(output, "ub%s = %s%s%s(min((%st + 1) * (%s%i_%i + 1), %s%s), ", x,
-			x, ATILING_GEN_STR_TRAHRHE, x, x, ATILING_GEN_STR_TILEVOL, level,
-			id, x, ATILING_GEN_STR_PCMAX);
+	fprintf(output, "ub%s = %s%s%s(min((%st + 1) * (%s%i_%i), %s%s), ", x, x,
+			ATILING_GEN_STR_TRAHRHE, x, x, ATILING_GEN_STR_TILEVOL, level, id,
+			x, ATILING_GEN_STR_PCMAX);
 
 	for (int i = 0; params[i] != NULL; i++) {
 		if (i != 0) {
@@ -199,64 +209,179 @@ static void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 		}
 		fprintf(output, "%s", params[i]);
 	}
-	fprintf(output, ");\n");
+	fprintf(output, ") - 1;\n");
+}
+
+static void atiling_gen_cloog_code(FILE *output, osl_scop_p scop, int level) {
+	CloogInput *input;
+	CloogOptions *cloogOptions;
+	CloogState *state;
+	state		 = cloog_state_malloc();
+	cloogOptions = cloog_options_malloc(state);
+	struct clast_stmt *root;
+	int nstmts		  = 1;
+	cloogOptions->sh  = 1;
+	cloogOptions->otl = 1;
+
+	cloogOptions->quiet = 1;
+
+	input = cloog_input_from_osl_scop(state, scop);
+	cloog_options_copy_from_osl_scop(scop, cloogOptions);
+
+	root = cloog_clast_create_from_input(input, cloogOptions);
+
+	clast_pprint(output, root, 0, cloogOptions);
+
+	cloog_clast_free(root);
+
+	cloog_options_free(cloogOptions);
+	cloog_state_free(state);
+}
+
+static void atiling_gen_domain(osl_statement_p stmt, osl_relation_p base,
+							   int orig_params, int it) {
+	int precision = base->precision;
+
+	osl_vector_p vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// i - lbi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1);		 // >= 0
+	osl_int_set_si(precision, &(vec->v[1 + it]), 1); // i
+	osl_int_set_si(precision,
+				   &(vec->v[1 + base->nb_output_dims + orig_params + it * 2]),
+				   -1); // -lbi
+
+	osl_relation_insert_vector(base, vec, -1);
+	osl_vector_free(vec);
+
+	vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// -i + ubi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1);		  // >= 0
+	osl_int_set_si(precision, &(vec->v[1 + it]), -1); // -i
+	osl_int_set_si(
+		precision,
+		&(vec->v[1 + base->nb_output_dims + orig_params + it * 2 + 1]),
+		1); // ubi
+
+	osl_relation_insert_vector(base, vec, -1);
+	osl_vector_free(vec);
+
+	vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// ubi >= 0 && ubi -lbi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1); // >= 0
+	osl_int_set_si(
+		precision,
+		&(vec->v[1 + base->nb_output_dims + orig_params + it * 2 + 1]),
+		1); // ubi
+
+	osl_relation_insert_vector(base, vec, -1);
+
+	osl_int_set_si(precision,
+				   &(vec->v[1 + base->nb_output_dims + orig_params + it * 2]),
+				   -1); // -lbi
+	osl_relation_insert_vector(base, vec, -1);
+
+	osl_vector_free(vec);
+
+	vec = osl_vector_pmalloc(precision, base->nb_columns);
+
+	// -i + ubi >= 0
+	osl_int_set_si(precision, &(vec->v[0]), 1);		  // >= 0
+	osl_int_set_si(precision, &(vec->v[1 + it]), -1); // -i
+	osl_int_set_si(
+		precision,
+		&(vec->v[1 + base->nb_output_dims + orig_params + it * 2 + 1]),
+		1); // ubi
+
+	osl_relation_insert_vector(base, vec, -1);
+	osl_vector_free(vec);
+}
+
+static void atiling_gen_update_domain(atiling_fragment_p frag,
+									  osl_statement_p stmt, int orig_params) {
+	int precision = stmt->domain->precision;
+	int num_it	  = 0;
+	osl_body_p body =
+		(osl_body_p)osl_generic_lookup(stmt->extension, OSL_URI_BODY);
+	if (body) {
+		num_it = osl_strings_size(body->iterators);
+	}
+
+	for (int i = 0; i < frag->loop_count; i++) {
+		if (strcmp(frag->divs[i], "1")) {
+			atiling_gen_domain(stmt, stmt->domain, orig_params, i);
+		}
+	}
 }
 
 /**
- * Generates the inner loop
+ * Generates the inner loops
  */
-static void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p fragment,
+static void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p frag,
 									int ilevel) {
-	for (int i = 0; i < fragment->loop_count; i++) {
-		char *x = fragment->loops[i]->name;
+	osl_scop_p scop	 = osl_scop_clone(frag->scop);
+	int orig_params	 = frag->scop->context->nb_parameters;
+	int added_params = frag->loop_count * 2;
+	int precision	 = scop->statement->domain->precision;
 
-		atiling_gen_indent(output, ilevel + 1 + i);
+	// Update context info
+	// We add two params (and row cols) for each iterator x : lbx and ubx
+	scop->context->nb_parameters += added_params;
+	scop->context->nb_columns += added_params;
 
-		if (fragment->divs[i][0] == '1' && fragment->divs[i][1] == 0) {
-			fprintf(output, "for(%s = ", x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->start_row, NULL);
-			fprintf(output, " ; %s <= ", x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->end_row, NULL);
-			fprintf(output, " ; %s++) {\n", x);
-		} else {
-			fprintf(output, "for(%s = max(", x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->start_row, NULL);
-			fprintf(output, ",lb%s); %s <= min(", x, x);
-			atiling_loop_info_bound_print(output, fragment->loops[i],
-										  fragment->loops[i]->end_row, NULL);
-			fprintf(output, ", ub%s); %s++) {\n", x, x);
-		}
+	// Add param names
+	osl_strings_p params = scop->parameters->data;
+	for (int i = 0; i < frag->loop_count; i++) {
+		char *str = malloc(strlen(frag->loops[i]->name) + 2 + 1);
+		sprintf(str, "%s%s", "lb", frag->loops[i]->name);
+		osl_strings_add(params, str);
+		sprintf(str, "%s%s", "ub", frag->loops[i]->name);
+		osl_strings_add(params, str);
+		free(str);
+	}
 
-		osl_statement_p statement = fragment->scop->statement;
-		osl_body_p body =
-			osl_generic_lookup(fragment->scop->extension, OSL_URI_BODY);
+	// For each statement
+	osl_statement_p stmt = scop->statement;
+	while (stmt != NULL) {
+		// Insert new cols
+		for (int i = 0; i < added_params; i++) {
 
-		while (statement != NULL) {
-			osl_generic_p st_ext = statement->extension;
-			osl_body_p body		 = st_ext->data;
+			osl_relation_insert_blank_column(stmt->domain,
+											 stmt->domain->nb_columns - 1);
+			osl_relation_insert_blank_column(stmt->scattering,
+											 stmt->scattering->nb_columns - 1);
 
-			if (body != NULL) {
-				if (osl_strings_size(body->iterators) == i + 1) {
-					osl_body_p ext =
-						osl_generic_lookup(statement->extension, OSL_URI_BODY);
-
-					if (ext != NULL) {
-						atiling_gen_indent(output, ilevel + 2 + i);
-						osl_strings_print(output, ext->expression);
-					}
-				}
+			osl_relation_list_p list = stmt->access;
+			while (list != NULL) {
+				osl_relation_insert_blank_column(list->elt,
+												 list->elt->nb_columns - 1);
+				list = list->next;
 			}
-
-			statement = statement->next;
 		}
+		stmt->domain->nb_parameters += added_params;
+		stmt->scattering->nb_parameters += added_params;
+
+		osl_relation_list_p list = stmt->access;
+		while (list != NULL) {
+			list->elt->nb_parameters += added_params;
+			list = list->next;
+		}
+
+		// Update domain
+		atiling_gen_update_domain(frag, stmt, orig_params);
+
+		stmt = stmt->next;
 	}
-	for (int i = fragment->loop_count - 1; i >= 0; i--) {
-		atiling_gen_indent(output, ilevel + 1 + i);
-		fprintf(output, "}\n");
-	}
+
+	FILE *tmp = fopen("inner.scop", "w");
+	osl_scop_print(tmp, scop);
+	fclose(tmp);
+
+	atiling_gen_cloog_code(output, scop, ilevel);
+
+	// osl_scop_free(scop);
 }
 
 static void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
@@ -266,6 +391,23 @@ static void atiling_gen_islice_adjust(FILE *output, char *x, loop_info_p info,
 	fprintf(output, "if(%st == ub%st) ub%s = ", x, x, x);
 	atiling_loop_info_bound_print(output, info, info->end_row, "ub");
 	fprintf(output, ";\n");
+}
+
+static void atiling_gen_ivolume_guard(FILE *output, char *name, int level,
+									  int id, int ilevel) {
+	//	if (ubi < lbi) { fprintf(stderr, "\nThe tile volume of level 1 (%ld)
+	// seems too small, raise it and try again\n",TILE_VOL_L1_0); exit(1); }
+	atiling_gen_indent(output, ilevel);
+	fprintf(output, "if (ub%s < lb%s ) {\n", name, name);
+	atiling_gen_indent(output, ilevel + 1);
+	fprintf(output,
+			"fprintf(stderr, \"The tile volume of level %i (%%ld) "
+			"seems too small, raise it and try again\\n\", %s%i_%i);\n",
+			level, ATILING_GEN_STR_TILEVOL, level, id);
+	atiling_gen_indent(output, ilevel + 1);
+	fprintf(output, "exit(1);\n");
+	atiling_gen_indent(output, ilevel);
+	fprintf(output, "}\n");
 }
 
 static void atiling_gen_ivardecl(FILE *output, loop_info_p info, int depth,
@@ -339,6 +481,9 @@ static void atiling_gen_iloop(FILE *output, atiling_fragment_p fragment,
 		atiling_gen_iubx(output, info->name, params->string, loop_index + 1,
 						 fragment->id, ilevel + 1);
 		atiling_gen_islice_adjust(output, info->name, info, ilevel + 1);
+
+		atiling_gen_ivolume_guard(output, info->name, loop_index + 1,
+								  fragment->id, ilevel + 1);
 
 		fprintf(output, "\n");
 
@@ -444,6 +589,8 @@ void atiling_gen_header(atiling_fragment_p fragment,
 	fprintf(trahrhe_tmp, "%s\n", cmd);
 	fprintf(trahrhe_tmp, "%s%i%s\n", basename(options->output), fragment->id,
 			ATILING_GEN_INCLUDE);
+	fprintf(trahrhe_tmp, "%i\n", fragment->loop_count);
+
 	fclose(trahrhe_tmp);
 
 	ATILING_debug("Done.");

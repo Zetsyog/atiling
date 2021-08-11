@@ -6,6 +6,6 @@ git submodule update
 rm -rf trahrhe/
 mkdir trahrhe
 cd trahrhe
-wget https://gforge.inria.fr/frs/download.php/file/38349/trahrhe-1.0.zip -O trahrhe.zip
+wget https://webpages.gitlabpages.inria.fr/trahrhe/trahrhe_packages/trahrhe-2.0.zip -O trahrhe.zip
 unzip -q trahrhe.zip && rm trahrhe.zip
 

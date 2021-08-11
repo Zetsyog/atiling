@@ -16,6 +16,7 @@ atiling_fragment_p atiling_parse(FILE *input, atiling_options_p options);
  */
 atiling_fragment_p atiling_extract(FILE *input, atiling_options_p options) {
 	atiling_fragment_p frag = atiling_parse(input, options);
+	frag->options			= options;
 
 	clan_options_p clan_opt = clan_options_malloc();
 
@@ -53,10 +54,6 @@ atiling_fragment_p atiling_extract(FILE *input, atiling_options_p options) {
 		frag->loops[j] = atiling_loop_info_get(frag->scop, j);
 	}
 	ATILING_debug("extracting loop info: done");
-
-	FILE *tmp = fopen("tmp.scop", "w");
-	clan_scop_print(tmp, frag->scop, clan_opt);
-	fclose(tmp);
 
 	clan_options_free(clan_opt);
 

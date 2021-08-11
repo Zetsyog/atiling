@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 /* Include polybench common header. */
-#include "polybench.h"
+#include <polybench.h>
 
 /* Include benchmark-specific header. */
 #include "2mm.h"
@@ -73,8 +73,9 @@ static void kernel_2mm(int ni, int nj, int nk, int nl, DATA_TYPE alpha,
 					   DATA_TYPE POLYBENCH_2D(C, NJ, NL, nj, nl),
 					   DATA_TYPE POLYBENCH_2D(D, NI, NL, ni, nl)) {
 	int i, j, k;
+	int i1, j1, k1;
 
-#pragma scop
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	/* D := alpha*A*B*C + beta*D */
 	for (i = 0; i < _PB_NI; i++)
 		for (j = 0; j < _PB_NJ; j++) {
@@ -82,13 +83,16 @@ static void kernel_2mm(int ni, int nj, int nk, int nl, DATA_TYPE alpha,
 			for (k = 0; k < _PB_NK; ++k)
 				tmp[i][j] += alpha * A[i][k] * B[k][j];
 		}
-	for (i = 0; i < _PB_NI; i++)
-		for (j = 0; j < _PB_NL; j++) {
-			D[i][j] *= beta;
-			for (k = 0; k < _PB_NJ; ++k)
-				D[i][j] += tmp[i][k] * C[k][j];
+#pragma endtrahrhe
+
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
+	for (i1 = 0; i1 < _PB_NI; i1++)
+		for (j1 = 0; j1 < _PB_NL; j1++) {
+			D[i1][j1] *= beta;
+			for (k1 = 0; k1 < _PB_NJ; ++k1)
+				D[i1][j1] += tmp[i1][k1] * C[k1][j1];
 		}
-#pragma endscop
+#pragma endtrahrhe
 }
 
 int main(int argc, char **argv) {

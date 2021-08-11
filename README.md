@@ -23,6 +23,11 @@ make
 ```
 to start compiling and 
 ```
-make install
+sudo make install
 ```
-(often need to sudo) to install atiling as a library
+to install as a library (WIP)
+
+## Resources
+
+- Polybench
+- Pluto

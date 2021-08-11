@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 atiling=@abs_top_builddir@/src/atiling
 trahrhe_dir=@abs_top_srcdir@/trahrhe/
 
@@ -20,17 +22,19 @@ run()
     OUTFILE=`cat $OUTFILENAME`
     TRAHRHE_OPT=`sed '1q;d' $OPTFILENAME`
     TRAHRHE_HEADER=`sed '2q;d' $OPTFILENAME`
-    echo $TRAHRHE_OPT
+    TRAHRHE_MAXLVL=`sed '3q;d' $OPTFILENAME`
 
     ATILINGOUT=$OUTFILE
 
     out_dirname=`dirname $OUTFILE`
 
+    echo $TRAHRHE_MAXLVL
+
     echo -e "Running trahrhe (in $trahrhe_dir)..."
     BACKUP=$PWD
     cd $trahrhe_dir
-    echo "./trahrhe $TRAHRHE_OPT"
-    ./trahrhe -d"$TRAHRHE_OPT" -e -t3 1> /dev/null
+    echo "./trahrhe -d\"$TRAHRHE_OPT\" -e -t$TRAHRHE_MAXLVL"
+    ./trahrhe -d"$TRAHRHE_OPT" -e -t$TRAHRHE_MAXLVL 1> /dev/null || exit 1
     cd $BACKUP
     echo -e "done."
 
@@ -49,7 +53,7 @@ run()
 cleanup() 
 {
     echo -e "Cleaning..."
-    rm -f $SRCFILENAME $OUTFILENAME $OPTFILENAME
+    rm -f $SRCFILENAME $OUTFILENAME $OPTFILENAME inner.scop tmp.scop
     echo -e "done."
 }
 

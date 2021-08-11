@@ -33,10 +33,15 @@ int main(int argc, char **argv) {
 		// extract code fragments
 		ATILING_debug("Extracting fragments");
 		atiling_fragment_p fragment = atiling_extract(input, options);
-
-		// atiling_apply_transform(fragment);
-
 		atiling_fragment_idump(stdout, fragment, 0);
+
+		if (options->pluto_opt) {
+			atiling_apply_transform(fragment);
+		}
+
+		FILE *tmp = fopen("tmp.scop", "w");
+		osl_scop_print(tmp, fragment->scop);
+		fclose(tmp);
 
 		// write new code in output file
 		ATILING_debug("Generating new code");

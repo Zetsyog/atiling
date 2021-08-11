@@ -7,7 +7,7 @@ struct atiling_options {
 	char *name;			/** Name of the input file */
 	char *output;		/** Name of the output file */
 	int keep_tmp_files; /** do not remove tmps files */
-						// TODO : option for pluto loop transformation
+	int pluto_opt;		/** Use pluto to perform more optimizations */
 };
 
 typedef struct atiling_options atiling_options_t;
