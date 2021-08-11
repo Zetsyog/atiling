@@ -4,6 +4,10 @@
 # tmp files
 output.c
 tmp.scop
+.srcfilename
+.outfilename
+.atrahrhe
+innter.scop
 
 # Generated executable
 /src/atiling
