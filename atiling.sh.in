@@ -11,59 +11,70 @@ SOURCEFILE=""
 OUTFILE=""
 dirname=""
 ATILINGOUT=""
-id=0
 
-run()
-{
+id=0
+HEADERS=()
+
+run() {
     echo -e "Running atiling..."
     $atiling $* || exit 1
 
-    SOURCEFILE=`cat $SRCFILENAME`
-    OUTFILE=`cat $OUTFILENAME`
-    TRAHRHE_OPT=`sed '1q;d' $OPTFILENAME`
-    TRAHRHE_HEADER=`sed '2q;d' $OPTFILENAME`
-    TRAHRHE_MAXLVL=`sed '3q;d' $OPTFILENAME`
+    SOURCEFILE=$(cat $SRCFILENAME)
+    OUTFILE=$(cat $OUTFILENAME)
+    TRAHRHE_OPT=$(sed '1q;d' $OPTFILENAME)
+    TRAHRHE_HEADER=$(sed '2q;d' $OPTFILENAME)
+    TRAHRHE_MAXLVL=$(sed '3q;d' $OPTFILENAME)
 
     ATILINGOUT=$OUTFILE
 
-    out_dirname=`dirname $OUTFILE`
+    out_dirname=$(dirname $OUTFILE)
 
-    echo $TRAHRHE_MAXLVL
+    HEADERS+=("$TRAHRHE_OPT;$out_dirname/$TRAHRHE_HEADER;$TRAHRHE_MAXLVL")
 
-    echo -e "Running trahrhe (in $trahrhe_dir)..."
-    BACKUP=$PWD
-    cd $trahrhe_dir
-    echo "./trahrhe -d\"$TRAHRHE_OPT\" -e -t$TRAHRHE_MAXLVL"
-    ./trahrhe -d"$TRAHRHE_OPT" -e -t$TRAHRHE_MAXLVL 1> /dev/null || exit 1
-    cd $BACKUP
-    echo -e "done."
-
-    echo -e "Moving header file..."
-    mv "$trahrhe_dir/trahrhe_tiling_header.h" "$out_dirname/$TRAHRHE_HEADER"
-    echo -e "done."
-
-    echo -e "Patching header..."
-    sed -i "s/TILEMIN/TILEMIN_$id/g" "$out_dirname/$TRAHRHE_HEADER"
-    echo -e "done."
-
-    id=$((id+1))
     cleanup
 }
 
-cleanup() 
-{
+cleanup() {
     echo -e "Cleaning..."
     rm -f $SRCFILENAME $OUTFILENAME $OPTFILENAME inner.scop tmp.scop
     echo -e "done."
 }
 
+gen_headers() {
+    echo -e "Starting header gen ..."
+    id=0
+
+    OLDIFS=$IFS
+    IFS=';'
+    for header in "${HEADERS[@]}"; do
+        set -- $header
+        echo "Generating header $2"
+        BACKUP=$PWD
+        cd $trahrhe_dir
+
+        echo "./trahrhe -d\"$1\" -e -t$3"
+        ./trahrhe -d"$1" -e -t$3 1>/dev/null || exit 1
+        cd $BACKUP
+        echo "done"
+
+        printf "Moving header file..."
+        mv "$trahrhe_dir/trahrhe_tiling_header.h" "$2"
+        echo "done"
+
+        printf "Patching header... "
+        sed -i "s/TILEMIN/TILEMIN_$id/g" "$2"
+        echo "done"
+
+        id=$((id + 1))
+    done
+    IFS=$OLDIFS
+}
+
 run "$*"
 WORK=1
 TEMPFILE=""
-while [ $WORK -eq 1 ]
-do
-    if grep -q "#pragma trahrhe atiling" "$ATILINGOUT"
-    then
+while [ $WORK -eq 1 ]; do
+    if grep -q "#pragma trahrhe atiling" "$ATILINGOUT"; then
         # Move the original file into a temporary location
         TEMPFILE="$SOURCEFILE""_temp"
         mv $SOURCEFILE $TEMPFILE
@@ -82,4 +93,6 @@ do
         # No more pragmas
         WORK=0
     fi
+
+    gen_headers
 done

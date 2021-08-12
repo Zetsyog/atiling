@@ -10,6 +10,8 @@ ATILINGFLAGS =
 TEST_SRC = \
 	linear-algebra/kernels/2mm/2mm.c \
 	linear-algebra/kernels/3mm/3mm.c \
+	datamining/correlation/correlation.c \
+	datamining/covariance/covariance.c \
 	linear-algebra/blas/syr2k/syr2k.c
 
 

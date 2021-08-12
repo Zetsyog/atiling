@@ -7,7 +7,7 @@
 struct loop_info {
 	char *name;
 	char **name_array;
-	osl_relation_p relation;
+	osl_relation_p domain;
 	char *ub; /**< Upper bound */
 	char *lb; /**< Lower bound */
 	size_t index;

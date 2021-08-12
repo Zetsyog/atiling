@@ -143,22 +143,39 @@ static void atiling_gen_iubxt(FILE *output, char *x, int vol_level, int id,
 
 static void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag,
 									int level) {
+	int first_depth;
+	for (first_depth = 0; first_depth < frag->loop_count; first_depth++) {
+		if (is_tiling_enabled(frag, first_depth)) {
+			break;
+		}
+	}
+
+	if (first_depth >= frag->loop_count) {
+		return;
+	}
+
 	atiling_gen_indent(output, level);
 	fprintf(output, "#pragma omp parallel for ");
 	fprintf(output, "firstprivate(%s%s, %s%i_%i, ub%st) \\\n",
-			frag->loops[0]->name, ATILING_GEN_STR_PCMAX,
-			ATILING_GEN_STR_TILEVOL, 1, frag->id, frag->loops[0]->name);
+			frag->loops[first_depth]->name, ATILING_GEN_STR_PCMAX,
+			ATILING_GEN_STR_TILEVOL, 1, frag->id,
+			frag->loops[first_depth]->name);
 	atiling_gen_indent(output, level + 3);
 	fprintf(output, "private(");
-	for (int i = 0; i < frag->loop_count; i++) {
-		if (i != 0) {
+
+	for (int i = first_depth; i < frag->loop_count; i++) {
+		if (!is_tiling_enabled(frag, i)) {
+			continue;
+		}
+
+		if (i != first_depth) {
 			fprintf(output, ", ");
 		}
 		fprintf(output, "%s", frag->loops[i]->name);
 		fprintf(output, ", %st", frag->loops[i]->name);
 		fprintf(output, ", lb%s", frag->loops[i]->name);
 		fprintf(output, ", ub%s", frag->loops[i]->name);
-		if (i != 0) {
+		if (i != first_depth) {
 			fprintf(output, ", %s%s", frag->loops[i]->name,
 					ATILING_GEN_STR_PCMAX);
 			fprintf(output, ", %s%i_%i", ATILING_GEN_STR_TILEVOL, i + 1,
@@ -310,7 +327,7 @@ static void atiling_gen_update_domain(atiling_fragment_p frag,
 	}
 
 	for (int i = 0; i < frag->loop_count; i++) {
-		if (strcmp(frag->divs[i], "1")) {
+		if (is_tiling_enabled(frag, i)) {
 			atiling_gen_domain(stmt, stmt->domain, orig_params, i);
 		}
 	}
@@ -454,15 +471,16 @@ static void atiling_gen_iloop(FILE *output, atiling_fragment_p fragment,
 
 	if (loop_index == 0) {
 		for (int i = 0; i < fragment->loop_count; i++) {
-			atiling_gen_ivardecl(output, fragment->loops[i], i, fragment->id,
-								 ilevel);
+			if (is_tiling_enabled(fragment, i)) {
+				atiling_gen_ivardecl(output, fragment->loops[i], i,
+									 fragment->id, ilevel);
+			}
 		}
 		fprintf(output, "\n");
 	}
 
 	// div == "1" means that no transformation is done on this loop
-	if (!(fragment->divs[loop_index][0] == '1' &&
-		  fragment->divs[loop_index][1] == 0)) {
+	if (is_tiling_enabled(fragment, loop_index)) {
 
 		atiling_gen_ixpcmax(output, info->name, params->string, ilevel);
 		atiling_gen_ivol_level(output, loop_index + 1, fragment->id, info->name,
@@ -536,27 +554,52 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 	cursor += sprintf(s + cursor, "]");
 	cursor += sprintf(s + cursor, " -> { [");
 
+	int written = ATILING_FALSE;
 	for (int i = 0; i < fragment->loop_count; i++) {
-		if (i != 0) {
+		if (!is_tiling_enabled(fragment, i)) {
+			ATILING_debug("not enabled");
+			continue;
+		}
+		ATILING_debug("enabled");
+
+		if (written) {
 			cursor += sprintf(s + cursor, ", ");
 		}
 		cursor += sprintf(s + cursor, "%s", fragment->loops[i]->name);
+		written = ATILING_TRUE;
 	}
 
 	cursor += sprintf(s + cursor, "] : ");
 
 	loop_info_p inner_loop = fragment->loops[fragment->loop_count - 1];
 
-	for (int i = 0; i < inner_loop->relation->nb_rows; i++) {
-		if (i != 0) {
+	int first_expr = ATILING_TRUE;
+	for (int i = 0; i < inner_loop->domain->nb_rows; i++) {
+		int write = ATILING_TRUE;
+
+		for (int j = 0; j < fragment->loop_count; j++) {
+			if (!is_tiling_enabled(fragment, j) &&
+				!osl_int_zero(inner_loop->domain->precision,
+							  inner_loop->domain->m[i][1 + j])) {
+				write = ATILING_FALSE;
+				break;
+			}
+		}
+		if (!write)
+			continue;
+
+		if (!first_expr) {
 			cursor += sprintf(s + cursor, " and ");
 		}
-		char *expr = osl_relation_expression(inner_loop->relation, i,
+
+		char *expr = osl_relation_expression(inner_loop->domain, i,
 											 inner_loop->name_array);
 
 		cursor += sprintf(s + cursor, "%s >= 0", expr);
 
 		free(expr);
+
+		first_expr = ATILING_FALSE;
 	}
 
 	cursor += sprintf(s + cursor, " }");
@@ -579,19 +622,33 @@ void atiling_gen_header(atiling_fragment_p fragment,
 	pid_t pid;
 	int ret;
 	ATILING_debug("Generating trahrhe header");
-	char cmd[256] = {0};
+	char cmd[256]	 = {0};
+	int tiling_level = 0;
 
 	atiling_sprint_trahrhe(cmd, fragment);
-	fprintf(stderr, "[ATILING] Debug : Trahrhe domain = %s\n", cmd);
-	fprintf(stderr, "[ATILING] Debug : %s -e -t2\n", cmd);
 
+	for (int i = 0; i < fragment->loop_count; i++) {
+		if (is_tiling_enabled(fragment, i)) {
+			tiling_level++;
+		}
+	}
+
+	// write .atrahrhe file to give bash script info
 	FILE *trahrhe_tmp = fopen(".atrahrhe", "w");
+	// first line is trahrhe domain
 	fprintf(trahrhe_tmp, "%s\n", cmd);
+	// second line is header name
 	fprintf(trahrhe_tmp, "%s%i%s\n", basename(options->output), fragment->id,
 			ATILING_GEN_INCLUDE);
-	fprintf(trahrhe_tmp, "%i\n", fragment->loop_count);
+	// third line is tile level
+	fprintf(trahrhe_tmp, "%i\n", tiling_level);
 
 	fclose(trahrhe_tmp);
+
+	ATILING_debug_call(
+		fprintf(stderr, "[ATILING] Debug: Trahrhe domain = %s\n", cmd));
+	ATILING_debug_call(fprintf(
+		stderr, "[ATILING] Debug: trahrhe tiling level = %i\n", tiling_level));
 
 	ATILING_debug("Done.");
 }

@@ -1,4 +1,5 @@
 #include "atiling/atiling.h"
+#include "string.h"
 
 atiling_fragment_p atiling_fragment_malloc() {
 	atiling_fragment_p frag;
@@ -9,6 +10,7 @@ atiling_fragment_p atiling_fragment_malloc() {
 	frag->start[1]	 = 0;
 	frag->end[0]	 = 0;
 	frag->end[1]	 = 0;
+	frag->div_len	 = 0;
 	frag->divs		 = NULL;
 	frag->loop_count = 0;
 	frag->loops		 = NULL;
@@ -69,4 +71,18 @@ void atiling_fragment_idump(FILE *file, atiling_fragment_p pragma, int level) {
 		}
 		fprintf(file, "|\t|   %s\n", pragma->divs[i]);
 	}
+}
+
+/**
+ * @param[in] fragment
+ * @param[in] depth
+ * @return whether the loop of given depth must be tiled or not
+ */
+int is_tiling_enabled(atiling_fragment_p fragment, int depth) {
+	if (depth < fragment->loop_count) {
+		if (fragment->divs[depth][0] == '1' && fragment->divs[depth][1] == 0) {
+			return ATILING_FALSE;
+		}
+	}
+	return ATILING_TRUE;
 }
