@@ -18,10 +18,12 @@ atiling_fragment_p atiling_extract(FILE *input, atiling_options_p options) {
 	atiling_fragment_p frag = atiling_parse(input, options);
 	frag->options			= options;
 
+	for (frag->div_len; frag->divs[frag->div_len] != NULL; frag->div_len++)
+		;
+
 	clan_options_p clan_opt = clan_options_malloc();
 
 	ATILING_strdup(clan_opt->name, frag->path);
-	ATILING_debug("dup");
 
 	ATILING_debug("Opening fragment file");
 	FILE *frag_input = fopen(frag->path, "r");
@@ -34,8 +36,6 @@ atiling_fragment_p atiling_extract(FILE *input, atiling_options_p options) {
 		clan_opt->name));
 	frag->scop = clan_scop_extract(frag_input, clan_opt);
 
-	ATILING_debug("well");
-
 	fclose(frag_input);
 
 	if (frag->scop == NULL) {
@@ -47,6 +47,23 @@ atiling_fragment_p atiling_extract(FILE *input, atiling_options_p options) {
 	ATILING_debug("extracting loop info");
 	frag->loop_count = atiling_count_nested_loop(frag->scop);
 	ATILING_debug("loop count done");
+
+	if (frag->loop_count < frag->div_len) {
+		ATILING_error("Too much divisors for not enough nested loops");
+	}
+	if (frag->loop_count > frag->div_len) {
+
+		ATILING_warning("Not enough divisors; Inner loops will not be tiled");
+		int missing_divs = frag->loop_count - frag->div_len;
+		ATILING_realloc(frag->divs, char **,
+						sizeof(char *) * (frag->loop_count + 1));
+		for (int i = 0; i < missing_divs; i++) {
+			ATILING_strdup(frag->divs[frag->div_len + i], "1");
+		}
+		frag->divs[frag->loop_count] = NULL;
+
+		frag->div_len = frag->loop_count;
+	}
 
 	frag->loops = malloc(sizeof(loop_info_p) * frag->loop_count);
 

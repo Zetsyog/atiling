@@ -150,7 +150,7 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 		// if m[i][1 + index] > 0
 		// ie rel of type loop iterator >= x
 		if (osl_int_gt(domain->precision, domain->m[i][1 + index], zero)) {
-			info->relation	= domain;
+			info->domain	= domain;
 			info->start_row = i;
 			info->end_row	= i + 1;
 			break;
@@ -187,7 +187,7 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 	}
 
 	// link col index with accurate names
-	info->name_array = osl_relation_strings(info->relation, names);
+	info->name_array = osl_relation_strings(info->domain, names);
 
 	info->parameters_names = osl_strings_malloc();
 	unsigned int i		   = 0;
@@ -222,7 +222,7 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 void atiling_atiling_loop_info_dump_relation(FILE *file, loop_info_p info,
 											 int row) {
 
-	char *exp = osl_relation_expression(info->relation, row, info->name_array);
+	char *exp = osl_relation_expression(info->domain, row, info->name_array);
 	fprintf(file, "%s >=0\n", exp);
 
 	free(exp);
@@ -243,8 +243,8 @@ void atiling_loop_info_bound_print(FILE *file, loop_info_p info, int row,
 								   char *dim_prefix) {
 	int written = ATILING_FALSE;
 
-	for (int i = 1; i < info->relation->nb_columns; i++) {
-		if (osl_int_zero(info->relation->precision, info->relation->m[row][i]))
+	for (int i = 1; i < info->domain->nb_columns; i++) {
+		if (osl_int_zero(info->domain->precision, info->domain->m[row][i]))
 			continue;
 
 		if (i == 1 + info->index) {
@@ -254,15 +254,14 @@ void atiling_loop_info_bound_print(FILE *file, loop_info_p info, int row,
 		if (written)
 			fprintf(file, "+");
 
-		if (!osl_int_one(info->relation->precision,
-						 info->relation->m[row][i])) {
-			osl_int_print(file, info->relation->precision,
-						  info->relation->m[row][i]);
+		if (!osl_int_one(info->domain->precision, info->domain->m[row][i])) {
+			osl_int_print(file, info->domain->precision,
+						  info->domain->m[row][i]);
 			fprintf(file, " * ");
 		}
 
 		if (dim_prefix != NULL && i >= 1 &&
-			i < 1 + info->relation->nb_output_dims) {
+			i < 1 + info->domain->nb_output_dims) {
 			fprintf(file, "%s%s ", dim_prefix, info->name_array[i]);
 		} else {
 			fprintf(file, "%s ", info->name_array[i]);
@@ -280,7 +279,7 @@ void atiling_loop_info_free(loop_info_p info) {
 		}
 		// Free the array of strings.
 		if (info->name_array != NULL) {
-			for (int i = 0; i < info->relation->nb_columns; i++)
+			for (int i = 0; i < info->domain->nb_columns; i++)
 				free(info->name_array[i]);
 			free(info->name_array);
 		}

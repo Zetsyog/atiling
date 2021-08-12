@@ -11,7 +11,7 @@ innter.scop
 
 # Generated executable
 /src/atiling
-atiling
+/atiling
 
 # Generated source files
 src/parser.c
