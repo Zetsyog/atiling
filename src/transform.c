@@ -26,6 +26,7 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 	context->options->tile			  = 1;
 	context->options->parallel		  = 1;
 	context->options->silent		  = 1;
+	context->options->fuse			  = kNoFuse;
 	context->options->debug			  = 0;
 	context->options->diamondtile	  = 0;
 	context->options->fulldiamondtile = 0;
