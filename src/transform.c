@@ -132,11 +132,24 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 			it_idx++;
 		}
 
+		for (int i = 0; i < order_len; i++) {
+			int j = 2 * i + 1;
+			if (strcmp(order->string[i], out_scatnames->names->string[j])) {
+				free(out_scatnames->names->string[j]);
+				ATILING_strdup(out_scatnames->names->string[j],
+							   order->string[i]);
+			}
+		}
+
 		osl_strings_free(order);
 
 		out_stmt   = out_stmt->next;
 		pluto_stmt = pluto_stmt->next;
 	}
+
+	char *str = osl_scatnames_sprint(out_scatnames);
+	printf("%s\n", str);
+	free(str);
 
 	osl_scop_free(pluto_scop);
 	pluto_context_free(context);

@@ -326,7 +326,7 @@ static void atiling_gen_update_domain(atiling_fragment_p frag,
 		num_it = osl_strings_size(body->iterators);
 	}
 
-	for (int i = 0; i < frag->loop_count; i++) {
+	for (int i = 0; i < num_it; i++) {
 		if (is_tiling_enabled(frag, i)) {
 			atiling_gen_domain(stmt, stmt->domain, orig_params, i);
 		}
