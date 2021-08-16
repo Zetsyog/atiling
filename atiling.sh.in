@@ -15,6 +15,11 @@ ATILINGOUT=""
 id=0
 HEADERS=()
 
+for arg in $*; do
+    if [ $arg == "--notrahrhe" ]; then
+        NOTRAHRHE=1
+done
+
 run() {
     echo -e "Running atiling..."
     $atiling $* || exit 1
@@ -93,6 +98,7 @@ while [ $WORK -eq 1 ]; do
         # No more pragmas
         WORK=0
     fi
-
-    gen_headers
+    if [[ $NOTRAHRHE -ne 1]]; then
+        gen_headers
+    fi
 done
