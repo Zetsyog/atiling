@@ -62,13 +62,14 @@ static void kernel_correlation(int m, int n, DATA_TYPE float_n,
 
 	DATA_TYPE eps = SCALAR_VAL(0.1);
 
-#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2)
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	for (j = 0; j < _PB_M; j++) {
 		mean[j] = SCALAR_VAL(0.0);
 		for (i = 0; i < _PB_N; i++)
 			mean[j] += data[i][j];
 		mean[j] /= float_n;
 	}
+
 	for (j = 0; j < _PB_M; j++) {
 		stddev[j] = SCALAR_VAL(0.0);
 		for (i = 0; i < _PB_N; i++)
@@ -80,28 +81,26 @@ static void kernel_correlation(int m, int n, DATA_TYPE float_n,
 		   divide. */
 		stddev[j] = stddev[j] <= eps ? SCALAR_VAL(1.0) : stddev[j];
 	}
+
 	/* Center and reduce the column vectors. */
 	for (i = 0; i < _PB_N; i++)
 		for (j = 0; j < _PB_M; j++) {
 			data[i][j] -= mean[j];
 			data[i][j] /= SQRT_FUN(float_n) * stddev[j];
 		}
-#pragma endtrahrhe
-	int i1, j1, k1;
-#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
+
 	/* Calculate the m * m correlation matrix. */
-	for (i1 = 0; i1 < _PB_M - 1; i1++) {
-		corr[i1][i1] = SCALAR_VAL(1.0);
-		for (j1 = i1 + 1; j1 < _PB_M; j1++) {
-			corr[i1][j1] = SCALAR_VAL(0.0);
-			for (k1 = 0; k1 < _PB_N; k1++)
-				corr[i1][j1] += (data[k1][i1] * data[k1][j1]);
-			corr[j1][i1] = corr[i1][j1];
+	for (i = 0; i < _PB_M - 1; i++) {
+		corr[i][i] = SCALAR_VAL(1.0);
+		for (j = i + 1; j < _PB_M; j++) {
+			corr[i][j] = SCALAR_VAL(0.0);
+			for (k = 0; k < _PB_N; k++)
+				corr[i][j] += (data[k][i] * data[k][j]);
+			corr[j][i] = corr[i][j];
 		}
 	}
-#pragma endtrahrhe
-
 	corr[_PB_M - 1][_PB_M - 1] = SCALAR_VAL(1.0);
+#pragma endtrahrhe
 }
 
 int main(int argc, char **argv) {

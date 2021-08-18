@@ -66,7 +66,8 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 
 	osl_scatnames_p out_scatnames =
 		osl_generic_lookup(frag->scop->extension, OSL_URI_SCATNAMES);
-	int scatnames_len = osl_strings_size(out_scatnames->names);
+	int scatnames_len			= osl_strings_size(out_scatnames->names);
+	osl_strings_p current_order = NULL;
 
 	while (out_stmt != NULL) {
 		osl_relation_p out_scat	  = out_stmt->scattering;
@@ -99,9 +100,8 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 		int it_idx	  = 0;
 
 		// Then we update output scattering func
-		for (int i = 0; i < scatnames_len; i++) {
+		for (int i = 0; i < scatnames_len && i < out_scat->nb_rows; i++) {
 			int ok = ATILING_FALSE;
-			printf("checking if %s ok...", out_scatnames->names->string[i]);
 			// We check this scat dim is a iterator in the order
 			for (int j = 0; j < order_len; j++) {
 				if (!strcmp(out_scatnames->names->string[i],
@@ -112,31 +112,53 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 			}
 			// if not we go to next dim
 			if (ok == ATILING_FALSE) {
-				printf("no\n");
 				continue;
 			}
-
-			printf("ok\n");
 
 			// if it is, this must be the first in the order
 			for (int j = 0; j < out_scat->nb_input_dims; j++) {
 				int val = strcmp(out_body->iterators->string[j],
 								 order->string[it_idx]) == 0;
-				printf("%i ", val);
 				osl_int_set_si(
 					out_scat->precision,
 					&out_scat->m[i][1 + out_scat->nb_output_dims + j], val);
 			}
-			printf("\n");
 
 			it_idx++;
 		}
 
-		osl_strings_free(order);
+		if (current_order != NULL) {
+			if (osl_strings_size(current_order) < order_len) {
+				osl_strings_free(current_order);
+				current_order = order;
+			} else {
+				osl_strings_free(order);
+			}
+		} else {
+			current_order = order;
+		}
 
 		out_stmt   = out_stmt->next;
 		pluto_stmt = pluto_stmt->next;
 	}
+	printf("New order : ");
+	int len = osl_strings_size(current_order);
+	for (int i = 0; i < len; i++) {
+		int j = 2 * i + 1;
+		if (j >= scatnames_len)
+			break;
+
+		if (strcmp(current_order->string[i], out_scatnames->names->string[j])) {
+			free(out_scatnames->names->string[j]);
+			ATILING_strdup(out_scatnames->names->string[j],
+						   current_order->string[i]);
+			osl_strings_print(stdout, out_scatnames->names);
+		}
+	}
+
+	char *str = osl_scatnames_sprint(out_scatnames);
+	printf("%s\n", str);
+	free(str);
 
 	osl_scop_free(pluto_scop);
 	pluto_context_free(context);

@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
 
 		if (options->pluto_opt) {
 			atiling_apply_transform(fragment);
+			ATILING_debug("Optimisation done");
 		}
 
 		FILE *tmp = fopen("tmp.scop", "w");

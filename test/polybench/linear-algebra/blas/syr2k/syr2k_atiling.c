@@ -71,7 +71,7 @@ static void kernel_syr2k(int n, int m, DATA_TYPE alpha, DATA_TYPE beta,
 // A is NxM
 // B is NxM
 // C is NxN
-#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2)
 	for (i1 = 0; i1 < _PB_N; i1++) {
 		for (j1 = 0; j1 <= i1; j1++)
 			C[i1][j1] *= beta;

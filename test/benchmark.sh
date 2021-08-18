@@ -2,15 +2,7 @@
 
 echo -e "Starting tests"
 
-POLYBENCH_TESTS=(
-    "linear-algebra/kernels/2mm/2mm"
-    "linear-algebra/kernels/3mm/3mm"
-    "linear-algebra/blas/syr2k/syr2k"
-    "datamining/correlation/correlation"
-    "datamining/covariance/covariance"
-)
-
-POLYBENCH_PATH="test/polybench"
+. ./bench_list.sh
 
 ## time_benchmark.sh for  in /Users/pouchet
 ##
@@ -80,17 +72,24 @@ run_bench() {
     rm -f ____tempfile.data.polybench
 }
 
-OUTFILE=""
-
-if [[ "$#" -eq 1 ]]; then
-    OUTFILE=$1
-
-    echo "Generating data file $OUTFILE"
-    echo -e "Bench Vanilla Pluto Atiling \"Pluto gain\" \"Atiling gain\"" >$OUTFILE
+if [[ $# -ne 2 ]]; then
+    echo "usage: $0 [output_file] [title]"
+    exit 1
 fi
 
-for i in ${!POLYBENCH_TESTS[@]}; do
-    base=$POLYBENCH_PATH/${POLYBENCH_TESTS[$i]}
+OUTFILE=$1
+TITLE=$2
+
+echo "Generating data file $OUTFILE"
+echo -e "\"Bench name\" Pluto Atiling \"Gain $TITLE\"" >$OUTFILE
+
+for bench in "${BENCHMARK_TESTS[@]}"; do
+    OLDIFS=$IFS
+    IFS=';'
+    set -- $bench
+    IFS=$OLDIFS
+
+    base="./$1"
     pluto="${base}_pluto"
     atiling="${base}_atiling"
     bench_name=$(basename $base)
@@ -98,31 +97,32 @@ for i in ${!POLYBENCH_TESTS[@]}; do
     base_score=0
     pluto_score=0
     atiling_score=0
+    gain_over_pluto=0
 
-    echo "-- Bench $bench_name"
-    echo "---- Default"
-    run_bench $base
-    base_score=$PROCESSED_TIME
-    echo "-------- Time $PROCESSED_TIME"
+    echo "---- Bench $bench_name"
+    # echo "---- Default"
+    # run_bench $base
+    # base_score=$PROCESSED_TIME
+    # echo "-------- Time $PROCESSED_TIME"
 
-    echo "---- Pluto"
+    echo "------ Pluto"
     run_bench $pluto
     pluto_score=$PROCESSED_TIME
-    pluto_gain=$(echo "scale=5;(($base_score - $pluto_score) / $base_score) * 100" | bc)
+    # pluto_gain=$(echo "scale=5;(($base_score - $pluto_score) / $base_score) * 100" | bc)
 
     echo "-------- Time $pluto_score"
-    echo "-------- Gain $pluto_gain"
 
-    echo "---- Atiling"
+    echo "------ Atiling"
     run_bench $atiling
     atiling_score=$PROCESSED_TIME
-    atiling_gain=$(echo "scale=5;(($base_score - $atiling_score) / $base_score) * 100" | bc)
+    # atiling_gain=$(echo "scale=5;(($base_score - $atiling_score) / $base_score) * 100" | bc)
+    gain_over_pluto=$(echo "scale=5;(($pluto_score - $atiling_score) / $pluto_score) * 100" | bc)
 
     echo "-------- Time $atiling_score"
-    echo "-------- Gain $atiling_gain"
+    echo "-------- Gain (over pluto) $gain_over_pluto"
 
     if [[ -n $OUTFILE ]]; then
-        echo "$bench_name $base_score $pluto_score $atiling_score $pluto_gain $atiling_gain" >>$OUTFILE
+        echo "$bench_name $pluto_score $atiling_score $gain_over_pluto" >>$OUTFILE
     fi
 
 done

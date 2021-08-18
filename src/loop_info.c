@@ -113,20 +113,23 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 
 	loop_info_p info = calloc(1, sizeof(loop_info_t));
 
-	osl_statement_p statement = scop->statement;
+	osl_statement_p statement;
+	osl_statement_p it_statement = scop->statement;
 
-	while (statement != NULL) {
-		osl_generic_p st_ext = statement->extension;
+	int it_len = 0;
+	while (it_statement != NULL) {
+		osl_generic_p st_ext = it_statement->extension;
 
 		osl_body_p body = st_ext->data;
 
 		if (body != NULL) {
-			if (index < osl_strings_size(body->iterators)) {
-				break;
+			if (it_len < osl_strings_size(body->iterators)) {
+				statement = it_statement;
+				it_len	  = osl_strings_size(body->iterators);
 			}
 		}
 
-		statement = statement->next;
+		it_statement = it_statement->next;
 	}
 
 	if (statement == NULL) {

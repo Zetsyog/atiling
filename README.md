@@ -27,6 +27,19 @@ sudo make install
 ```
 to install as a library (WIP)
 
+## Usage
+
+```
+atiling [options] input_file
+```
+*Character `-` is a special value for `input_file` to get input from stdin* 
+
+Options available:
+- *-o, --output* Set output file. Use *stdout* to set output to stdout
+- *--transform* Enable loop transformations for better performance
+- *-v, --version* Display release information
+- *-h, --help* Display program help
+
 ## Resources
 
 - Polybench

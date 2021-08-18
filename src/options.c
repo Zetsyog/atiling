@@ -101,10 +101,13 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 	int c;
 	int digit_optind = 0;
 
-	static struct option long_options[] = {
-		{"version", no_argument, 0, 0},		 {"help", no_argument, 0, 0},
-		{"output", required_argument, 0, 0}, {"verbose", no_argument, 0, 0},
-		{"transform", no_argument, 0, 0},	 {0, 0, 0, 0}};
+	static struct option long_options[] = {{"version", no_argument, 0, 0},
+										   {"help", no_argument, 0, 0},
+										   {"output", required_argument, 0, 0},
+										   {"verbose", no_argument, 0, 0},
+										   {"transform", no_argument, 0, 0},
+										   {"notrahrhe", no_argument, 0, 0},
+										   {0, 0, 0, 0}};
 
 	while (1) {
 		int this_option_optind = optind ? optind : 1;

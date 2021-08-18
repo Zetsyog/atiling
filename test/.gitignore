@@ -1,2 +1,4 @@
 *_gen.*
 *.cloog
+*tile.sizes
+*atiling.sizes
