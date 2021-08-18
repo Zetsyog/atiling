@@ -32,6 +32,7 @@ for bench in "${BENCHMARK_TESTS[@]}"; do
         rm -f $output && cp $pluto_input $pluto_output
         rm -f $pluto_target $pluto_obj
         make -s $pluto_target
+    fi
     if [[ -f $atiling_input ]]; then
         rm -f $atiling_target $atiling_obj
         asizes=$(cat $atiling_input)
@@ -41,7 +42,7 @@ for bench in "${BENCHMARK_TESTS[@]}"; do
             FLAGS+="-DATILING_DIV$i=${size} "
             i=$((i + 1))
         done
-        make ADDCFLAGS="$FLAGS" -s $atiling_target 
+        make ADDCFLAGS="$FLAGS" -s $atiling_target
     fi
 
 done
