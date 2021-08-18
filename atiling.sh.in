@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 atiling=@abs_top_builddir@/src/atiling
 trahrhe_dir=@abs_top_srcdir@/trahrhe/
 
