@@ -8,7 +8,7 @@ PREFIX=$1
 
 . ./bench_list.sh
 
-SIZE_LIST="1 8 16"
+SIZE_LIST="8 16"
 
 best_score=""
 best_sizes=""
@@ -24,10 +24,15 @@ find_tile_sizes_rec() {
     local max_level=$4
     local level=$5
 
-    for i in $SIZE_LIST; do
+    list=$SIZE_LIST
+    if [[ $level -eq $max_level ]]; then
+        list+=" 1"
+    fi
+
+    for i in $list; do
         sed -i "${level}s/.*/$i/" $tile_file
         if [[ $level -eq $max_level ]]; then
-            rm $source
+            rm -f $source
             make ADDCFLAGS="-w" $exec -s >/dev/null
 
             score1=$($exec)

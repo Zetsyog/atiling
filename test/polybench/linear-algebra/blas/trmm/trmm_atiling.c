@@ -74,15 +74,9 @@ static void kernel_trmm(int m, int n, DATA_TYPE alpha,
 #pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
 	for (i = 0; i < _PB_M; i++)
 		for (j = 0; j < _PB_N; j++) {
-			for (k = i; k < _PB_M - 1; k++) {
-				B[i + 1][j] += A[k][i + 1] * B[k][j];
-			}
-		}
-#pragma endtrahrhe
-#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2)
-	for (i1 = 0; i1 < _PB_M; i1++)
-		for (j1 = 0; j1 < _PB_N; j1++) {
-			B[i1][j1] = alpha * B[i1][j1];
+			for (k = i + 1; k < _PB_M; k++)
+				B[i][j] += A[k][i] * B[k][j];
+			B[i][j] = alpha * B[i][j];
 		}
 #pragma endtrahrhe
 }

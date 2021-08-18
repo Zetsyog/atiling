@@ -18,6 +18,7 @@ HEADERS=()
 for arg in $*; do
     if [ $arg == "--notrahrhe" ]; then
         NOTRAHRHE=1
+    fi
 done
 
 run() {
@@ -84,12 +85,12 @@ while [ $WORK -eq 1 ]; do
         TEMPFILE="$SOURCEFILE""_temp"
         mv $SOURCEFILE $TEMPFILE
 
-        # Move the file that still has scope in it into
+        # Move the file that still has pragma in it into
         # place of the original source file, so $* will pick the
         # correct file
         mv $ATILINGOUT $SOURCEFILE
 
-        # Run pluto again
+        # Run atiling again
         run "$*"
 
         # Move the original back in place
@@ -98,7 +99,9 @@ while [ $WORK -eq 1 ]; do
         # No more pragmas
         WORK=0
     fi
-    if [[ $NOTRAHRHE -ne 1]]; then
-        gen_headers
-    fi
+
 done
+
+if [[ $NOTRAHRHE -ne 1 ]]; then
+    gen_headers
+fi

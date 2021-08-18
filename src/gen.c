@@ -542,13 +542,23 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 
 	cursor += sprintf(s + cursor, "[");
 
-	int param_size = osl_strings_size(fragment->loops[0]->parameters_names);
+	int param_size = 0;
+	int loop_idx   = 0;
+	for (int i = 0; i < fragment->loop_count; i++) {
+		int k = osl_strings_size(fragment->loops[0]->parameters_names);
+		if (k > param_size) {
+			param_size = k;
+			loop_idx   = i;
+		}
+	}
+
 	for (int i = 0; i < param_size; i++) {
 		if (i != 0) {
 			cursor += sprintf(s + cursor, ", ");
 		}
-		cursor += sprintf(s + cursor, "%s",
-						  fragment->loops[0]->parameters_names->string[i]);
+		cursor +=
+			sprintf(s + cursor, "%s",
+					fragment->loops[loop_idx]->parameters_names->string[i]);
 	}
 
 	cursor += sprintf(s + cursor, "]");
@@ -574,30 +584,27 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 	loop_info_p inner_loop = fragment->loops[fragment->loop_count - 1];
 
 	int first_expr = ATILING_TRUE;
-	for (int i = 0; i < inner_loop->domain->nb_rows; i++) {
-		int write = ATILING_TRUE;
-
-		for (int j = 0; j < fragment->loop_count; j++) {
-			if (!is_tiling_enabled(fragment, j) &&
-				!osl_int_zero(inner_loop->domain->precision,
-							  inner_loop->domain->m[i][1 + j])) {
-				write = ATILING_FALSE;
-				break;
-			}
-		}
-		if (!write)
+	for (int i = 0; i < fragment->div_len; i++) {
+		if (!is_tiling_enabled(fragment, i)) {
 			continue;
+		}
 
 		if (!first_expr) {
 			cursor += sprintf(s + cursor, " and ");
 		}
 
-		char *expr = osl_relation_expression(inner_loop->domain, i,
-											 inner_loop->name_array);
+		char *expr;
+		for (int j = 0; j < 3 && i * 3 + j < inner_loop->domain->nb_rows; j++) {
+			if (j != 0) {
+				cursor += sprintf(s + cursor, " and ");
+			}
 
-		cursor += sprintf(s + cursor, "%s >= 0", expr);
+			expr = osl_relation_expression(inner_loop->domain, i * 3 + j,
+										   inner_loop->name_array);
+			cursor += sprintf(s + cursor, "%s >= 0", expr);
 
-		free(expr);
+			free(expr);
+		}
 
 		first_expr = ATILING_FALSE;
 	}

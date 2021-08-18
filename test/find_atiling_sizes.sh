@@ -24,11 +24,15 @@ find_tile_sizes_rec() {
     local max_level=$3
     local level=$4
 
-    for i in $SIZE_LIST; do
+    list=$SIZE_LIST
+    if [[ $level -eq $max_level ]]; then
+        list+=" 1"
+    fi
+    for i in $list; do
         current_sizes[$level]=$i
 
         if [[ $level -eq $max_level ]]; then
-            rm $exec
+            rm -f $exec
             FLAGS="-w "
             for i in $(seq 1 $max_level); do
                 FLAGS+="-DATILING_DIV$i=${current_sizes[$i]} "
