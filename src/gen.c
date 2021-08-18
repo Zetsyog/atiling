@@ -566,12 +566,6 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 
 	int written = ATILING_FALSE;
 	for (int i = 0; i < fragment->loop_count; i++) {
-		if (!is_tiling_enabled(fragment, i)) {
-			ATILING_debug("not enabled");
-			continue;
-		}
-		ATILING_debug("enabled");
-
 		if (written) {
 			cursor += sprintf(s + cursor, ", ");
 		}
@@ -584,27 +578,17 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 	loop_info_p inner_loop = fragment->loops[fragment->loop_count - 1];
 
 	int first_expr = ATILING_TRUE;
-	for (int i = 0; i < fragment->div_len; i++) {
-		if (!is_tiling_enabled(fragment, i)) {
-			continue;
-		}
+	for (int i = 0; i < inner_loop->domain->nb_rows; i++) {
 
 		if (!first_expr) {
 			cursor += sprintf(s + cursor, " and ");
 		}
 
-		char *expr;
-		for (int j = 0; j < 3 && i * 3 + j < inner_loop->domain->nb_rows; j++) {
-			if (j != 0) {
-				cursor += sprintf(s + cursor, " and ");
-			}
+		char *expr = osl_relation_expression(inner_loop->domain, i,
+											 inner_loop->name_array);
+		cursor += sprintf(s + cursor, "%s >= 0", expr);
 
-			expr = osl_relation_expression(inner_loop->domain, i * 3 + j,
-										   inner_loop->name_array);
-			cursor += sprintf(s + cursor, "%s >= 0", expr);
-
-			free(expr);
-		}
+		free(expr);
 
 		first_expr = ATILING_FALSE;
 	}
