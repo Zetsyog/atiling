@@ -91,7 +91,6 @@ AC_OUTPUT([
   Makefile \
   src/Makefile \
   test/Makefile \
-  test/polybench/Makefile \
   atiling.sh
 ])
 
