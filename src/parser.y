@@ -38,16 +38,16 @@
 %type<str_array> arg_list
 %type<str> arg
 
-%start list
+%start atiling_list
 %%
-list:
-      pragma      { ATILING_debug("rule list.1: pragma"); }
-    | list pragma { ATILING_debug("rule list.2: list pragma"); }
-    | list IGNORE {}
+atiling_list:
+      atiling      { ATILING_debug("rule list.1: pragma"); }
+    | atiling_list atiling { ATILING_debug("rule list.2: list pragma"); }
+    | atiling_list IGNORE {}
     | IGNORE      {}
     ;
 
-pragma:
+atiling:
       pragma_begin instr_list pragma_end 
     ;
 
@@ -103,7 +103,7 @@ arg:
 
 void yyerror(char *s) {
 	int i, line = 1;
-	char c = 'C';
+	int c = 'C';
 	FILE *file;
 
 	ATILING_debug("parse error notified");
@@ -123,7 +123,9 @@ void yyerror(char *s) {
         // Print the line.
         while (c != EOF) {
             c = fgetc(file);
-            fprintf(stderr, "%c", c);
+            if(c != EOF)
+                fprintf(stderr, "%c", c);
+            
             if (c == '\n')
                 break;
         }
@@ -141,6 +143,7 @@ void yyerror(char *s) {
     } else {
         ATILING_warning("cannot open input file");
     }
+    exit(1);
 }
 
 atiling_fragment_p atiling_parse(FILE *input, atiling_options_p options) {
