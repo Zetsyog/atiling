@@ -57,7 +57,7 @@ gen_headers() {
         cd $trahrhe_dir
 
         echo "./trahrhe -d\"$1\" -e -t$3"
-        ./trahrhe -d"$1" -e -t$3 1>/dev/null || exit 1
+        ./trahrhe -d"$1" -e -t$3 || exit 1
         cd $BACKUP
         echo "done"
 
