@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 static void atiling_gen_fragment(FILE *, atiling_fragment_p, atiling_options_p);
-static void atiling_sprint_trahrhe(char *s, atiling_fragment_p);
+static void atiling_print_trahrhe(FILE *s, atiling_fragment_p);
 static void atiling_gen_iloop(FILE *, atiling_fragment_p, int, osl_strings_p,
 							  int);
 static void gen_macros(FILE *, char *, int);
@@ -46,6 +46,7 @@ void atiling_gen(FILE *input, FILE *output, atiling_fragment_p fragment,
 	rewind(input);
 
 	gen_macros(output, options->output, fragment->id);
+
 	while ((c = fgetc(input)) != EOF) {
 		if (c == '\n') {
 			line++;
@@ -554,11 +555,10 @@ static void atiling_gen_iloop(FILE *output, atiling_fragment_p fragment,
 /**
  * Write the trahrhe domain argument inside a string
  */
-void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
-	int cursor		= 0;
+void atiling_print_trahrhe(FILE *out, atiling_fragment_p fragment) {
 	osl_scop_p scop = fragment->scop;
 
-	cursor += sprintf(s + cursor, "[");
+	fprintf(out, "[");
 
 	int param_size = 0;
 	int loop_idx   = 0;
@@ -572,26 +572,25 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 
 	for (int i = 0; i < param_size; i++) {
 		if (i != 0) {
-			cursor += sprintf(s + cursor, ", ");
+			fprintf(out, ", ");
 		}
-		cursor +=
-			sprintf(s + cursor, "%s",
-					fragment->loops[loop_idx]->parameters_names->string[i]);
+		fprintf(out, "%s",
+				fragment->loops[loop_idx]->parameters_names->string[i]);
 	}
 
-	cursor += sprintf(s + cursor, "]");
-	cursor += sprintf(s + cursor, " -> { [");
+	fprintf(out, "]");
+	fprintf(out, " -> { [");
 
 	int written = ATILING_FALSE;
 	for (int i = 0; i < fragment->loop_count; i++) {
 		if (written) {
-			cursor += sprintf(s + cursor, ", ");
+			fprintf(out, ", ");
 		}
-		cursor += sprintf(s + cursor, "%s", fragment->loops[i]->name);
+		fprintf(out, "%s", fragment->loops[i]->name);
 		written = ATILING_TRUE;
 	}
 
-	cursor += sprintf(s + cursor, "] : ");
+	fprintf(out, "] : ");
 
 	loop_info_p inner_loop = fragment->loops[fragment->loop_count - 1];
 
@@ -599,19 +598,19 @@ void atiling_sprint_trahrhe(char *s, atiling_fragment_p fragment) {
 	for (int i = 0; i < inner_loop->domain->nb_rows; i++) {
 
 		if (!first_expr) {
-			cursor += sprintf(s + cursor, " and ");
+			fprintf(out, " and ");
 		}
 
 		char *expr = osl_relation_expression(inner_loop->domain, i,
 											 inner_loop->name_array);
-		cursor += sprintf(s + cursor, "%s >= 0", expr);
+		fprintf(out, "%s >= 0", expr);
 
 		free(expr);
 
 		first_expr = ATILING_FALSE;
 	}
 
-	cursor += sprintf(s + cursor, " }");
+	fprintf(out, " }");
 }
 
 /**
@@ -635,13 +634,8 @@ void gen_macros(FILE *output, char *out, int id) {
  */
 void atiling_gen_info_file(atiling_fragment_p fragment,
 						   atiling_options_p options) {
-	pid_t pid;
-	int ret;
 	ATILING_debug("Generating trahrhe header");
-	char cmd[256]	 = {0};
 	int tiling_level = 0;
-
-	atiling_sprint_trahrhe(cmd, fragment);
 
 	for (int i = 0; i < fragment->loop_count; i++) {
 		if (is_tiling_enabled(fragment, i)) {
@@ -652,7 +646,8 @@ void atiling_gen_info_file(atiling_fragment_p fragment,
 	// write .atrahrhe file to give bash script info
 	FILE *trahrhe_tmp = fopen(".atrahrhe", "w");
 	// first line is trahrhe domain
-	fprintf(trahrhe_tmp, "%s\n", cmd);
+	atiling_print_trahrhe(trahrhe_tmp, fragment);
+	fprintf(trahrhe_tmp, "\n");
 	// second line is header name
 	fprintf(trahrhe_tmp, "%s%i%s\n", basename(options->output), fragment->id,
 			ATILING_GEN_INCLUDE);
@@ -661,8 +656,9 @@ void atiling_gen_info_file(atiling_fragment_p fragment,
 
 	fclose(trahrhe_tmp);
 
-	ATILING_debug_call(
-		fprintf(stderr, "[ATILING] Debug: Trahrhe domain = %s\n", cmd));
+	ATILING_debug_call(fprintf(stderr, "[ATILING] Debug: Trahrhe domain = "));
+	ATILING_debug_call(atiling_print_trahrhe(stderr, fragment));
+	ATILING_debug_call(fprintf(stderr, "\n"));
 	ATILING_debug_call(fprintf(
 		stderr, "[ATILING] Debug: trahrhe tiling level = %i\n", tiling_level));
 
