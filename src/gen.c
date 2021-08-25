@@ -165,23 +165,22 @@ static void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag,
 	fprintf(output, "private(");
 
 	for (int i = first_depth; i < frag->loop_count; i++) {
-		if (!is_tiling_enabled(frag, i)) {
-			continue;
-		}
 
 		if (i != first_depth) {
 			fprintf(output, ", ");
 		}
 		fprintf(output, "%s", frag->loops[i]->name);
-		fprintf(output, ", %st", frag->loops[i]->name);
-		fprintf(output, ", lb%s", frag->loops[i]->name);
-		fprintf(output, ", ub%s", frag->loops[i]->name);
-		if (i != first_depth) {
-			fprintf(output, ", %s%s", frag->loops[i]->name,
-					ATILING_GEN_STR_PCMAX);
-			fprintf(output, ", %s%i_%i", ATILING_GEN_STR_TILEVOL, i + 1,
-					frag->id);
-			fprintf(output, ", ub%st", frag->loops[i]->name);
+		if (is_tiling_enabled(frag, i)) {
+			fprintf(output, ", %st", frag->loops[i]->name);
+			fprintf(output, ", lb%s", frag->loops[i]->name);
+			fprintf(output, ", ub%s", frag->loops[i]->name);
+			if (i != first_depth) {
+				fprintf(output, ", %s%s", frag->loops[i]->name,
+						ATILING_GEN_STR_PCMAX);
+				fprintf(output, ", %s%i_%i", ATILING_GEN_STR_TILEVOL, i + 1,
+						frag->id);
+				fprintf(output, ", ub%st", frag->loops[i]->name);
+			}
 		}
 	}
 	fprintf(output, ")\n");
