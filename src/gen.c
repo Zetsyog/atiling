@@ -237,7 +237,8 @@ static void atiling_gen_cloog_code(FILE *output, osl_scop_p scop, int level) {
 	state		 = cloog_state_malloc();
 	cloogOptions = cloog_options_malloc(state);
 	struct clast_stmt *root;
-	int nstmts		  = 1;
+
+	cloogOptions->f	  = -1;
 	cloogOptions->sh  = 1;
 	cloogOptions->otl = 1;
 
