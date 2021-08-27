@@ -52,16 +52,16 @@
 		exit(1);                                                       \
 	} while (0)
 
-#define ATILING_malloc(ptr, type, size)           \
+#define ATILING_malloc(ptr, size)                 \
 	do {                                          \
 		if (((ptr) = (type)malloc(size)) == NULL) \
 			ATILING_error("memory overflow");     \
 	} while (0)
 
-#define ATILING_realloc(ptr, type, size)                \
-	do {                                                \
-		if (((ptr) = (type)realloc(ptr, size)) == NULL) \
-			ATILING_error("memory overflow");           \
+#define ATILING_realloc(ptr, size)                \
+	do {                                          \
+		if (((ptr) = realloc(ptr, size)) == NULL) \
+			ATILING_error("memory overflow");     \
 	} while (0)
 
 #define ATILING_strdup(destination, source)               \

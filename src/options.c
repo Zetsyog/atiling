@@ -17,7 +17,7 @@ atiling_options_p atiling_options_malloc(void) {
 	atiling_options_p options;
 
 	// Memory allocation for the clan_options_t structure.
-	ATILING_malloc(options, atiling_options_p, sizeof(atiling_options_t));
+	ATILING_malloc(options, sizeof(atiling_options_t));
 
 	// We set the various fields with default values.
 	options->name			= NULL; // Name of the input file is not set.

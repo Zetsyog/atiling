@@ -18,7 +18,7 @@
     void yyerror(char*);
     void yyrestart(FILE*);
     void atiling_scanner_init();
-    void atiling_scanner_pragma_begin(char **);
+    void atiling_scanner_pragma_begin(char **, int);
 
     char *input_name;
 %}
@@ -54,7 +54,7 @@ atiling:
 pragma_begin:
       PRAGMA_BEGIN '(' arg_list ')' { 
             scanner_pragma_header = ATILING_FALSE;
-            atiling_scanner_pragma_begin($3.values);
+            atiling_scanner_pragma_begin($3.values, $3.size);
         }
     ;
 
@@ -72,7 +72,7 @@ instr_list:
 
 arg_list:
       arg { 
-            ATILING_malloc($$.values, char **, sizeof(char *) * 2);
+            ATILING_malloc($$.values, sizeof(char *) * 2);
             $$.values[0] = $1;
             $$.values[1] = NULL;
             $$.size = 1;
@@ -81,7 +81,7 @@ arg_list:
             }
         }
     | arg_list ',' arg {
-            ATILING_realloc($1.values, char **, sizeof(char *) * ($1.size + 2));
+            ATILING_realloc($1.values, sizeof(char *) * ($1.size + 2));
             $$.size = $1.size + 1;
             $$.values = $1.values;
             $$.values[$$.size - 1] = $3;

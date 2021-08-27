@@ -16,7 +16,7 @@ IS          ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
     int  atiling_scanner(int, char*);
     void atiling_scanner_init();
     void atiling_scanner_copy();
-    void atiling_scanner_pragma_begin(char **divs);
+    void atiling_scanner_pragma_begin(char **divs, int);
     void atiling_scanner_pragma_end();
 
     int scanner_pragma;           /**< Are we inside pragma? */
@@ -121,7 +121,7 @@ void atiling_scanner_count() {
     }
 }
 
-void atiling_scanner_pragma_begin(char **divs) {
+void atiling_scanner_pragma_begin(char **divs, int len) {
     if(scanner_fragment != NULL) {
         return;
     }
@@ -143,6 +143,7 @@ void atiling_scanner_pragma_begin(char **divs) {
     
     scanner_fragment = atiling_fragment_malloc();
     scanner_fragment->divs = divs;
+    scanner_fragment->div_len = len;
 
     ATILING_strdup(scanner_fragment->path, name);
     scanner_fragment->start[0] = scanner_line;
