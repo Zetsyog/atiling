@@ -15,7 +15,7 @@ bin_PROGRAMS = atiling
 atiling_SOURCES = \
 	parser.y \
 	main.c \
-	loop_info.c \
+	loop.c \
 	scanner.l \
 	atiling.c \
 	options.c \

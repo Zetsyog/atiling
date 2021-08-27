@@ -96,13 +96,13 @@ size_t atiling_count_nested_loop(osl_scop_p scop) {
 	return ret;
 }
 
-void atiling_get_iterator_name(loop_info_p info, osl_statement_p statement) {
+void atiling_get_iterator_name(atiling_loop_p info, osl_statement_p statement) {
 	osl_body_p body = statement->extension->data;
 
-	info->name = strdup(body->iterators->string[info->index]);
+	ATILING_strdup(info->it, body->iterators->string[info->depth]);
 }
 
-loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
+atiling_loop_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 	int parameters_backedup			= 0;
 	int arrays_backedup				= 0;
 	int iterators_backedup			= 0;
@@ -111,7 +111,7 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 	osl_strings_p arrays_backup		= NULL;
 	osl_names_p names;
 
-	loop_info_p info = calloc(1, sizeof(loop_info_t));
+	atiling_loop_p info = calloc(1, sizeof(atiling_loop_t));
 
 	osl_statement_p statement;
 	osl_statement_p it_statement = scop->statement;
@@ -137,7 +137,7 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 		return NULL;
 	}
 
-	info->index = index;
+	info->depth = index;
 	atiling_get_iterator_name(info, statement);
 
 	osl_relation_p domain = statement->domain;
@@ -222,7 +222,7 @@ loop_info_p atiling_loop_info_get(osl_scop_p scop, size_t index) {
 	return info;
 }
 
-void atiling_atiling_loop_info_dump_relation(FILE *file, loop_info_p info,
+void atiling_atiling_loop_info_dump_relation(FILE *file, atiling_loop_p info,
 											 int row) {
 
 	char *exp = osl_relation_expression(info->domain, row, info->name_array);
@@ -231,9 +231,9 @@ void atiling_atiling_loop_info_dump_relation(FILE *file, loop_info_p info,
 	free(exp);
 }
 
-void atiling_loop_info_dump(FILE *file, loop_info_p info) {
-	fprintf(file, "Loop index %li\n", info->index);
-	fprintf(file, "iterator name = %s\n", info->name);
+void atiling_loop_info_dump(FILE *file, atiling_loop_p info) {
+	fprintf(file, "Loop depth %li\n", info->depth);
+	fprintf(file, "iterator name = %s\n", info->it);
 	fprintf(file, "start :\n\t");
 	atiling_atiling_loop_info_dump_relation(file, info, info->start_row);
 	fprintf(file, "\n");
@@ -242,44 +242,14 @@ void atiling_loop_info_dump(FILE *file, loop_info_p info) {
 	atiling_atiling_loop_info_dump_relation(file, info, info->end_row);
 }
 
-void atiling_loop_info_bound_print(FILE *file, loop_info_p info, int row,
-								   char *dim_prefix) {
-	int written = ATILING_FALSE;
-
-	for (int i = 1; i < info->domain->nb_columns; i++) {
-		if (osl_int_zero(info->domain->precision, info->domain->m[row][i]))
-			continue;
-
-		if (i == 1 + info->index) {
-			continue;
-		}
-
-		if (written)
-			fprintf(file, "+");
-
-		if (!osl_int_one(info->domain->precision, info->domain->m[row][i])) {
-			osl_int_print(file, info->domain->precision,
-						  info->domain->m[row][i]);
-			fprintf(file, " * ");
-		}
-
-		if (dim_prefix != NULL && i >= 1 &&
-			i < 1 + info->domain->nb_output_dims) {
-			fprintf(file, "%s%s ", dim_prefix, info->name_array[i]);
-		} else {
-			fprintf(file, "%s ", info->name_array[i]);
-		}
-		written = ATILING_TRUE;
-	}
-	if (written == ATILING_FALSE)
-		fprintf(file, "0 ");
-}
-
-void atiling_loop_info_free(loop_info_p info) {
+void atiling_loop_info_free(atiling_loop_p info) {
 	if (info) {
-		if (info->name != NULL) {
-			free(info->name);
+		if (info->it != NULL) {
+			free(info->it);
 		}
+		free(info->lb);
+		free(info->ub);
+
 		// Free the array of strings.
 		if (info->name_array != NULL) {
 			for (int i = 0; i < info->domain->nb_columns; i++)
