@@ -118,6 +118,18 @@ void atiling_fragment_get_loops_bound(atiling_fragment_p frag) {
 	cloogOptions->otl	= 1;
 	cloogOptions->quiet = 1;
 
+	osl_scatnames_p scatnames =
+		osl_generic_lookup(scop->extension, OSL_URI_SCATNAMES);
+	int scatnames_len = osl_strings_size(scatnames->names);
+	for (int i = 1; i < scatnames_len; i += 2) {
+		char *old = scatnames->names->string[i];
+		// new string will be ub[old] so new len is old + 2 + 1
+		// one more for the terminating 0 char
+		scatnames->names->string[i] = malloc(strlen(old) + 2 + 1);
+		sprintf(scatnames->names->string[i], "%s%s", "ub", old);
+		free(old);
+	}
+
 	input = cloog_input_from_osl_scop(state, scop);
 	cloog_options_copy_from_osl_scop(scop, cloogOptions);
 	root = cloog_clast_create_from_input(input, cloogOptions);
