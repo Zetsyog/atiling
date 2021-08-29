@@ -109,7 +109,7 @@ static void kernel_correlation(int m, int n, DATA_TYPE float_n,
 			for (k = 0; k < _PB_N; k++) {
 				corr[i][j] += (data[k][i] * data[k][j]);
 			}
-			// corr[j][i] = corr[i][j];
+			corr[j][i] = corr[i][j];
 		}
 	}
 #pragma endtrahrhe
