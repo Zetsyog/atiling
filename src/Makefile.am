@@ -6,6 +6,8 @@ AM_CFLAGS = $(CFLAGS_WARN)
 AM_CPPFLAGS = $(ATILING_INCLUDES) -g
 AM_YFLAGS = -y -d
 
+EXTRA_DIST = ../include/atiling/macros.h.in
+
 BUILT_SOURCES = parser.h
 
 ################################################################################

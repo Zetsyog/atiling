@@ -2,6 +2,8 @@
 #include <getopt.h>
 #include <string.h>
 
+int ATILING_DEBUG = 0;
+
 /*+****************************************************************************
  *                         Memory allocation function                         *
  ******************************************************************************/
@@ -24,6 +26,7 @@ atiling_options_p atiling_options_malloc(void) {
 	options->output			= "stdout";
 	options->keep_tmp_files = ATILING_FALSE;
 	options->pluto_opt		= ATILING_FALSE;
+	options->debug			= ATILING_FALSE;
 	return options;
 }
 
@@ -51,6 +54,8 @@ void atiling_options_help() {
 		"\nGeneral options:\n"
 		"  -o <output>          Name of the output file; 'stdout' is a "
 		"special\n"
+		"  --notrahrhe          Do not call trahrhe to generate tiling headers"
+		"  --debug              Print debug information\n"
 		"  -v, --version        Display the release information (and more).\n"
 		"  -h, --help           Display this information.\n\n");
 	printf(
@@ -104,7 +109,7 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 	static struct option long_options[] = {{"version", no_argument, 0, 0},
 										   {"help", no_argument, 0, 0},
 										   {"output", required_argument, 0, 0},
-										   {"verbose", no_argument, 0, 0},
+										   {"debug", no_argument, 0, 0},
 										   {"transform", no_argument, 0, 0},
 										   {"notrahrhe", no_argument, 0, 0},
 										   {0, 0, 0, 0}};
@@ -129,8 +134,9 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 				infos = ATILING_TRUE;
 			}
 			// Print debug info
-			else if (!strcmp(long_options[option_index].name, "verbose")) {
-				// TODO
+			else if (!strcmp(long_options[option_index].name, "debug")) {
+				options->debug = ATILING_TRUE;
+				ATILING_DEBUG  = ATILING_TRUE;
 			}
 			// Do pluto optimization
 			else if (!strcmp(long_options[option_index].name, "transform")) {

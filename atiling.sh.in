@@ -20,7 +20,6 @@ for arg in $*; do
 done
 
 run() {
-    echo -e "Running atiling..."
     $atiling $* || exit 1
 
     SOURCEFILE=$(cat $SRCFILENAME)
@@ -39,20 +38,20 @@ run() {
 }
 
 cleanup() {
-    echo -e "Cleaning..."
+    echo "[ATILING] Info: Cleaning..."
     rm -f $SRCFILENAME $OUTFILENAME $OPTFILENAME inner.scop tmp.scop
-    echo -e "done."
+    echo "[ATILING] Info: done."
 }
 
 gen_headers() {
-    echo -e "Starting header gen ..."
+    echo -e "[ATILING] Info: Starting header gen ..."
     id=0
 
     OLDIFS=$IFS
     IFS=';'
     for header in "${HEADERS[@]}"; do
         set -- $header
-        echo "Generating header $2"
+        echo "[ATILING] Info: Generating header $2"
         BACKUP=$PWD
         cd $trahrhe_dir
 
@@ -61,11 +60,11 @@ gen_headers() {
         cd $BACKUP
         echo "done"
 
-        printf "Moving header file..."
+        printf "[ATILING] Info: Moving header file..."
         mv "$trahrhe_dir/trahrhe_tiling_header.h" "$2"
         echo "done"
 
-        printf "Patching header... "
+        printf "[ATILING] Info: Patching header... "
         sed -i "s/TILEMIN/TILEMIN_$id/g" "$2"
         echo "done"
 

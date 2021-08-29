@@ -15,8 +15,10 @@ atiling_fragment_p atiling_parse(FILE *input, atiling_options_p options);
  * @return An array of code fragments
  */
 atiling_fragment_p atiling_extract(FILE *input, atiling_options_p options) {
-	atiling_fragment_p frag = atiling_parse(input, options);
-	frag->options			= options;
+	atiling_fragment_p frag;
+
+	frag		  = atiling_parse(input, options);
+	frag->options = options;
 
 	clan_options_p clan_opt = clan_options_malloc();
 

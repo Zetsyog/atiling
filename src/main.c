@@ -10,6 +10,8 @@ int main(int argc, char **argv) {
 
 	options = atiling_options_read(argc, argv, &input, &output);
 
+	ATILING_info("Starting atiling");
+
 	ATILING_debug("Writing temp info files");
 
 	// write .srcfilename info file
@@ -31,11 +33,24 @@ int main(int argc, char **argv) {
 	if (options->name != NULL) {
 
 		// extract code fragments
-		ATILING_debug("Extracting fragments");
+		ATILING_info("Parsing input file...");
 		atiling_fragment_p fragment = atiling_extract(input, options);
-		atiling_fragment_idump(stdout, fragment, 0);
+
+		fprintf(stderr, "[ATILING] Info: loop depth = %i\n",
+				fragment->loop_count);
+		fprintf(stderr, "[ATILING] Info: divisors = (");
+		for (int i = 0; i < fragment->div_len; i++) {
+			fprintf(stderr, "%s", fragment->divs[i]);
+			if (i < fragment->div_len - 1) {
+				fprintf(stderr, ", ");
+			}
+		}
+		fprintf(stderr, ")\n");
+
+		ATILING_debug_call(atiling_fragment_idump(stdout, fragment, 0));
 
 		if (options->pluto_opt) {
+			ATILING_info("Applying loop optimisation...");
 			atiling_apply_transform(fragment);
 			ATILING_debug("Optimisation done");
 		}
@@ -45,7 +60,7 @@ int main(int argc, char **argv) {
 		fclose(tmp);
 
 		// write new code in output file
-		ATILING_debug("Generating new code");
+		ATILING_info("Starting generation...");
 		atiling_gen(input, output, fragment, options);
 
 		// save the planet
@@ -56,6 +71,8 @@ int main(int argc, char **argv) {
 
 	// still saving the planet
 	atiling_options_free(options);
+
+	ATILING_info("Done.");
 
 	return 0;
 }
