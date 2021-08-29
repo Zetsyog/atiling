@@ -57,30 +57,29 @@ static void kernel_covariance(int m, int n, DATA_TYPE float_n,
 							  DATA_TYPE POLYBENCH_2D(data, N, M, n, m),
 							  DATA_TYPE POLYBENCH_2D(cov, M, M, m, m),
 							  DATA_TYPE POLYBENCH_1D(mean, M, m)) {
-	int i, j;
+	int i, j, k;
 
-#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2)
+#pragma omp parallel for private(i, j)
 	for (j = 0; j < _PB_M; j++) {
 		mean[j] = SCALAR_VAL(0.0);
 		for (i = 0; i < _PB_N; i++)
 			mean[j] += data[i][j];
 		mean[j] /= float_n;
 	}
+
+#pragma omp parallel for private(i, j)
 	for (i = 0; i < _PB_N; i++)
 		for (j = 0; j < _PB_M; j++)
 			data[i][j] -= mean[j];
-#pragma endtrahrhe
-
-	int i1, j1, k1;
 
 #pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
-	for (i1 = 0; i1 < _PB_M; i1++)
-		for (j1 = i1; j1 < _PB_M; j1++) {
-			cov[i1][j1] = SCALAR_VAL(0.0);
-			for (k1 = 0; k1 < _PB_N; k1++)
-				cov[i1][j1] += data[k1][i1] * data[k1][j1];
-			cov[i1][j1] /= (float_n - SCALAR_VAL(1.0));
-			cov[j1][i1] = cov[i1][j1];
+	for (i = 0; i < _PB_M; i++)
+		for (j = i; j < _PB_M; j++) {
+			cov[i][j] = SCALAR_VAL(0.0);
+			for (k = 0; k < _PB_N; k++)
+				cov[i][j] += data[k][i] * data[k][j];
+			cov[i][j] /= (float_n - SCALAR_VAL(1.0));
+			cov[j][i] = cov[i][j];
 		}
 #pragma endtrahrhe
 }

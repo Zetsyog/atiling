@@ -74,10 +74,15 @@ static void kernel_gemm(int ni, int nj, int nk, DATA_TYPE alpha, DATA_TYPE beta,
 // A is NIxNK
 // B is NKxNJ
 // C is NIxNJ
-#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
+#pragma omp parallel for private(i, j)
 	for (i = 0; i < _PB_NI; i++) {
 		for (j = 0; j < _PB_NJ; j++)
 			C[i][j] *= beta;
+	}
+#pragma trahrhe atiling(ATILING_DIV1, ATILING_DIV2, ATILING_DIV3)
+	for (i = 0; i < _PB_NI; i++) {
+		// for (j = 0; j < _PB_NJ; j++)
+		// C[i][j] *= beta;
 		for (k = 0; k < _PB_NK; k++) {
 			for (j = 0; j < _PB_NJ; j++)
 				C[i][j] += alpha * A[i][k] * B[k][j];

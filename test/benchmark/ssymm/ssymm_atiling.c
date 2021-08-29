@@ -47,10 +47,17 @@ int main() {
 				c[i][k] += a[j][k] * b[i][j];
 				c[i][j] += a[j][j] * b[i][j];
 			}
-			c[i][j] += a[j][j] * b[i][j];
+			// c[i][j] += a[j][j] * b[i][j];
 		}
 	}
 #pragma endtrahrhe
+
+#pragma omp parallel for private(i, j)
+	for (i = 0; i < NMAX; i++) {
+		for (j = 0; j < NMAX; j++) {
+			c[i][j] += a[j][j] * b[i][j];
+		}
+	}
 
 	IF_TIME(t_end = rtclock());
 	IF_TIME(fprintf(stdout, "%0.6lf\n", t_end - t_start));
