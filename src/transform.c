@@ -53,13 +53,15 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 
 	pluto_populate_scop(pluto_scop, prog, context);
 
-	FILE *tmp = fopen("pluto.scop", "w");
-	if (tmp == NULL) {
-		ATILING_error("tmp fopen");
-	}
+	if (ATILING_DEBUG) {
+		FILE *tmp = fopen("pluto.scop", "w");
+		if (tmp == NULL) {
+			ATILING_error("tmp fopen");
+		}
 
-	osl_scop_print(tmp, pluto_scop);
-	fclose(tmp);
+		osl_scop_print(tmp, pluto_scop);
+		fclose(tmp);
+	}
 
 	osl_statement_p pluto_stmt = pluto_scop->statement;
 	osl_statement_p out_stmt   = frag->scop->statement;
@@ -95,7 +97,7 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 				}
 			}
 		}
-		osl_strings_print(stdout, order);
+		ATILING_debug_call(osl_strings_print(stderr, order));
 		int order_len = osl_strings_size(order);
 		int it_idx	  = 0;
 
@@ -141,23 +143,25 @@ void atiling_apply_transform(atiling_fragment_p frag) {
 		out_stmt   = out_stmt->next;
 		pluto_stmt = pluto_stmt->next;
 	}
-	printf("New order : ");
+	fprintf(stderr, "[ATILING] Info: New order = ( ");
 	int len = osl_strings_size(current_order);
 	for (int i = 0; i < len; i++) {
 		int j = 2 * i + 1;
 		if (j >= scatnames_len)
 			break;
 
+		fprintf(stderr, "%s ", current_order->string[i]);
+
 		if (strcmp(current_order->string[i], out_scatnames->names->string[j])) {
 			free(out_scatnames->names->string[j]);
 			ATILING_strdup(out_scatnames->names->string[j],
 						   current_order->string[i]);
-			osl_strings_print(stdout, out_scatnames->names);
 		}
 	}
+	printf(")\n");
 
 	char *str = osl_scatnames_sprint(out_scatnames);
-	printf("%s\n", str);
+	ATILING_debug_call(fprintf(stderr, "%s\n", str));
 	free(str);
 
 	osl_scop_free(pluto_scop);
