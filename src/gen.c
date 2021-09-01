@@ -181,19 +181,14 @@ static void atiling_gen_iomp_pragma(FILE *output, atiling_fragment_p frag,
 				fprintf(output, "ub%st", frag->loops[i]->it);
 				written = ATILING_TRUE;
 			} else {
-				fprintf(output, "%s ", frag->loops[i]->it);
+				fprintf(output, "%s", frag->loops[i]->it);
 				written = ATILING_TRUE;
 			}
 		} else {
 			if (is_tiling_enabled(frag, i)) {
 				fprintf(output, "%s, ", frag->loops[i]->it);
 				fprintf(output, "lb%s, ", frag->loops[i]->it);
-				fprintf(output, "ub%s, ", frag->loops[i]->it);
-				fprintf(output, "%s%s, ", frag->loops[i]->it,
-						ATILING_GEN_STR_PCMAX);
-				fprintf(output, "%s%i_%i, ", ATILING_GEN_STR_TILEVOL, i + 1,
-						frag->id);
-				fprintf(output, "ub%st", frag->loops[i]->it);
+				fprintf(output, "ub%s", frag->loops[i]->it);
 				written = ATILING_TRUE;
 			}
 		}
