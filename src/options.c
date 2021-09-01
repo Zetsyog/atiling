@@ -27,6 +27,7 @@ atiling_options_p atiling_options_malloc(void) {
 	options->keep_tmp_files = ATILING_FALSE;
 	options->pluto_opt		= ATILING_FALSE;
 	options->debug			= ATILING_FALSE;
+	options->vectorize		= ATILING_FALSE;
 	return options;
 }
 
@@ -52,12 +53,15 @@ void atiling_options_help() {
 	printf("Usage: atiling [ options ] input_file\n");
 	printf(
 		"\nGeneral options:\n"
-		"  -o <output>          Name of the output file; 'stdout' is a "
-		"special\n"
-		"  --notrahrhe          Do not call trahrhe to generate tiling headers"
-		"  --debug              Print debug information\n"
-		"  -v, --version        Display the release information (and more).\n"
-		"  -h, --help           Display this information.\n\n");
+		"  -o, --output <output>        Name of the output file; 'stdout' is "
+		"a  special\n"
+		"  --markvector                 Add #pragma omp simd to inner loop\n"
+		"  --notrahrhe                  Do  ot call trahrhe to generate tiling "
+		"headers\n"
+		"  --debug                      Print debug information\n"
+		"  -v, --version                Display the release information (and "
+		"more).\n"
+		"  -h, --help                   Display this information.\n\n");
 	printf(
 		"The special value 'stdin' for 'input_file' or the special option '-' "
 		"makes atiling\n"
@@ -106,13 +110,11 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 	int c;
 	int digit_optind = 0;
 
-	static struct option long_options[] = {{"version", no_argument, 0, 0},
-										   {"help", no_argument, 0, 0},
-										   {"output", required_argument, 0, 0},
-										   {"debug", no_argument, 0, 0},
-										   {"transform", no_argument, 0, 0},
-										   {"notrahrhe", no_argument, 0, 0},
-										   {0, 0, 0, 0}};
+	static struct option long_options[] = {
+		{"version", no_argument, 0, 0},		 {"help", no_argument, 0, 0},
+		{"output", required_argument, 0, 0}, {"debug", no_argument, 0, 0},
+		{"transform", no_argument, 0, 0},	 {"markvector", no_argument, 0, 0},
+		{"notrahrhe", no_argument, 0, 0},	 {0, 0, 0, 0}};
 
 	while (1) {
 		int this_option_optind = optind ? optind : 1;
@@ -145,6 +147,10 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 			// Set output file
 			else if (!strcmp(long_options[option_index].name, "output")) {
 				atiling_options_set_output(optarg, output, options);
+			}
+			// set vector flag
+			else if (!strcmp(long_options[option_index].name, "markvector")) {
+				options->vectorize = ATILING_TRUE;
 			}
 			break;
 		case 'h':
@@ -186,6 +192,9 @@ atiling_options_p atiling_options_read(int argc, char **argv, FILE **input,
 				ATILING_strdup(options->name, argv[optind]);
 			}
 		}
+	} else {
+		free(options);
+		exit(0);
 	}
 
 	if (*input == NULL && infos == ATILING_FALSE)

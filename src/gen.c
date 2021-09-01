@@ -239,7 +239,34 @@ static void atiling_gen_iubx(FILE *output, char *x, char **params, int level,
 	fprintf(output, ") - 1;\n");
 }
 
-static void atiling_gen_cloog_code(FILE *output, osl_scop_p scop, int level) {
+static int mark_inner_loop_rec(struct clast_stmt *f) {
+	struct clast_stmt *it = f;
+	int ret				  = ATILING_FALSE;
+	for (; it; it = it->next) {
+		if (CLAST_STMT_IS_A(it, stmt_root)) {
+			continue;
+		} else if (CLAST_STMT_IS_A(it, stmt_for)) {
+			struct clast_for *loop = (struct clast_for *)it;
+			ret					   = ATILING_TRUE;
+			if (mark_inner_loop_rec(loop->body) == 0) {
+				loop->parallel = CLAST_PARALLEL_OMP | CLAST_PARALLEL_USER;
+				ATILING_strdup(loop->user_directive, "omp simd");
+			}
+		} else if (CLAST_STMT_IS_A(it, stmt_block)) {
+			// if its a block we want to see if there is any for loop inside but
+			// loop depth is still the same
+			ret += mark_inner_loop_rec(((struct clast_block *)it)->body);
+		} else if (CLAST_STMT_IS_A(it, stmt_guard)) {
+			// same for guard, we need to look deeper
+			ret += mark_inner_loop_rec(((struct clast_guard *)it)->then);
+		}
+	}
+
+	return ret;
+}
+
+static void atiling_gen_cloog_code(FILE *output, osl_scop_p scop, int vectorize,
+								   int level) {
 	CloogInput *input;
 	CloogOptions *cloogOptions;
 	CloogState *state;
@@ -256,6 +283,10 @@ static void atiling_gen_cloog_code(FILE *output, osl_scop_p scop, int level) {
 	cloog_options_copy_from_osl_scop(scop, cloogOptions);
 
 	root = cloog_clast_create_from_input(input, cloogOptions);
+
+	if (vectorize) {
+		mark_inner_loop_rec(root);
+	}
 
 	clast_pprint(output, root, 0, cloogOptions);
 
@@ -421,7 +452,7 @@ static void atiling_gen_iinner_loop(FILE *output, atiling_fragment_p frag,
 	osl_scop_print(tmp, scop);
 	fclose(tmp);
 
-	atiling_gen_cloog_code(output, scop, ilevel);
+	atiling_gen_cloog_code(output, scop, frag->options->vectorize, ilevel);
 
 	// osl_scop_free(scop);
 }

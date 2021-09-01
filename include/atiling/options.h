@@ -9,6 +9,7 @@ struct atiling_options {
 	int keep_tmp_files; /** do not remove tmps files */
 	int debug;
 	int pluto_opt; /** Use pluto to perform more optimizations */
+	int vectorize; /** add pragma omp simd on inner loop */
 };
 
 typedef struct atiling_options atiling_options_t;

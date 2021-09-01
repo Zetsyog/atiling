@@ -12,10 +12,13 @@ ATILINGOUT=""
 
 id=0
 HEADERS=()
+NORUN=0
 
 for arg in $*; do
     if [ $arg == "--notrahrhe" ]; then
         NOTRAHRHE=1
+    elif [ $arg == "--help" ] || [ $arg == "--version" ] || [ $arg == "-v" ] || [ $arg == "-h" ]; then
+        NORUN=1
     fi
 done
 
@@ -73,7 +76,11 @@ gen_headers() {
     IFS=$OLDIFS
 }
 
+if [[ $NORUN -eq 1 ]]; then
+    $atiling $* && exit 0
+fi
 run "$*"
+
 WORK=1
 TEMPFILE=""
 while [ $WORK -eq 1 ]; do

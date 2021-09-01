@@ -1,19 +1,17 @@
+#include <clan/clan.h>
+#include <cloog/cloog.h>
+#include <math_support.h>
+#include <osl/extensions/irregular.h>
+#include <osl/scop.h>
+#include <osl_pluto.h>
+#include <pluto.h>
+#include <pluto/pluto.h>
+#include <post_transform.h>
+#include <program.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "math_support.h"
-#include "osl_pluto.h"
-#include "pluto.h"
-#include "pluto/pluto.h"
-#include "post_transform.h"
-#include "program.h"
-#include "transforms.h"
-#include "version.h"
-
-#include "clan/clan.h"
-
-#include "osl/extensions/irregular.h"
-#include "osl/scop.h"
+#include <transforms.h>
+#include <version.h>
 
 #include "atiling/fragment.h"
 #include "atiling/macros.h"
